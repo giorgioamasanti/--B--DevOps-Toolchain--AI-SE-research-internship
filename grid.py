@@ -1,5 +1,4 @@
 import pygame
-import logging
 
 class Grid:
     def __init__(self, width=10, height=20, block_size=30):
@@ -10,7 +9,6 @@ class Grid:
         self.color_grid = [[(0, 0, 0) for _ in range(width)] for _ in range(height)]  # New grid for colors
 
     def draw(self, surface):
-        # Fill the background with black
         surface.fill((0, 0, 0))
         for y in range(self.height):
             for x in range(self.width):
@@ -37,10 +35,12 @@ class Grid:
                         self.grid[position[0] + y][position[1] + x] = 1  # Mark the grid as filled
                         self.color_grid[position[0] + y][position[1] + x] = color  # Store the color
                     else:
-                        logging.warning(f"Tetromino position {position} is out of bounds.")
-                        return  # Handle out-of-bounds gracefully
-        logging.info(f"Tetromino placed at position: {position} with color: {color}")  # Log tetromino placement
-        self.clear_filled_rows()  # Clear filled rows after placing a tetromino
+                        # print(f"Tetromino position {position} is out of bounds.")
+                        return 0  # Handle out-of-bounds gracefully
+        # print(f"Tetromino placed at position: {position} with color: {color}")  # Log tetromino placement
+        filled_rows = self.clear_filled_rows()  # Clear filled rows after placing a tetromino
+        print(f"place_tetromino: Filled rows cleared: {filled_rows}")  # Debug print for filled rows
+        return filled_rows  # Return the number of filled rows cleared
 
     def is_valid_position(self, tetromino, position):
         shape = tetromino.get_shape()
@@ -64,13 +64,13 @@ class Grid:
         original_shape = tetromino.get_shape()  # Backup the original shape
         if tetromino.rotate(self.get_state()):
             if not self.is_valid_position(tetromino, self.tetromino_position):
-                logging.warning("Rotation resulted in invalid position, reverting.")
+                # print("Rotation resulted in invalid position, reverting.")
                 tetromino.shape = original_shape  # Revert to original shape if invalid
                 return False
-            logging.info("Tetromino rotated successfully.")
+            # print("Tetromino rotated successfully.")
             return True
         else:
-            logging.warning("Rotation failed, shape remains unchanged.")
+            # print("Rotation failed, shape remains unchanged.")
             return False
 
     def check_filled_rows(self):
@@ -78,16 +78,16 @@ class Grid:
         for y in range(self.height):
             if all(self.grid[y]):  # Check if all columns in the row are filled
                 filled_rows.append(y)  # Add the filled row index to the list
-        logging.info(f"Filled rows detected: {filled_rows}")  # Log filled rows
+        print(f"check_filled_rows: Filled rows detected: {filled_rows}")  # Debug print for filled rows
         return filled_rows
 
     def clear_filled_rows(self):
         filled_rows = self.check_filled_rows()  # Get filled rows
         for row in filled_rows:
-            # Clear the filled row
             self.grid.pop(row)  # Remove the filled row
-            # Insert a new empty row at the top
             self.grid.insert(0, [0 for _ in range(self.width)])  # Add a new empty row at the top
             self.color_grid.pop(row)  # Remove the color row
             self.color_grid.insert(0, [(0, 0, 0) for _ in range(self.width)])  # Add new empty color row
-        logging.info(f"Cleared filled rows: {filled_rows}")  # Log cleared rows
+        # print(f"Cleared filled rows: {filled_rows}")  # Log cleared rows
+        print(f"clear_filled_rows: Cleared filled rows: {filled_rows}")  # Debug print for filled rows
+        return len(filled_rows)  # Return the number of cleared rows

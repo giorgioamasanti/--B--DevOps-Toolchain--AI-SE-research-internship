@@ -1,39 +1,43 @@
 import pygame
 import sys
-import logging
 from tetromino import Tetromino
 from grid import Grid
 
 class TetrisGame:
     def __init__(self, width=10, height=20, block_size=30):
-        # Initialize Pygame
         pygame.init()
 
-        # Constants
-        self.screen_width = width * block_size
+        self.screen_width = width * block_size + 200  # Add 200 pixels for the score display
         self.screen_height = height * block_size
         self.fps = 60
 
-        # Setup the display
         self.screen = pygame.display.set_mode((self.screen_width, self.screen_height))
         pygame.display.set_caption("Tetris")
 
-        # Create grid
         self.grid = Grid(width, height, block_size)
 
-        # Initialize clock
         self.clock = pygame.time.Clock()
 
-        # Instantiate the Tetromino
         self.current_tetromino = Tetromino()
         self.tetromino_position = [0, width // 2 - 1]  # Start at the top of the grid
 
-        logging.info("Tetris game initialized.")
+        self.score = 0  # Initialize the score at the start of the game
+
+        self.drop_time = 0.75  # Time interval for dropping tetromino (750ms)
+        self.last_drop_time = pygame.time.get_ticks() / 1000.0  # Track the last drop time in seconds
+
+        print("Tetris game initialized. Falling delay set to 750ms.")
 
     def run(self):
         running = True
         while running:
             try:
+                current_time = pygame.time.get_ticks() / 1000.0  # Get the current time in seconds
+                if current_time - self.last_drop_time >= self.drop_time:
+                    print("Tetromino is about to drop.")
+                    self.move_tetromino(0, 1)  # Move tetromino down
+                    self.last_drop_time = current_time  # Reset the last drop time
+
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
                         running = False
@@ -47,32 +51,34 @@ class TetrisGame:
                         elif event.key == pygame.K_UP:
                             self.rotate_tetromino()  # Rotate
 
-                # Clear the screen
                 self.screen.fill((0, 0, 0))  # Fill with black background
 
-                # Draw the grid
                 self.grid.draw(self.screen)
 
-                # Draw the current tetromino
                 self.draw_tetromino()
 
-                # Update the display
+                self.draw_score()  # Add this line to draw the score
+
                 pygame.display.flip()
                 self.clock.tick(self.fps)
 
             except Exception as e:
-                logging.error("An error occurred: ", exc_info=True)
+                print(f"An error occurred: {e}")
 
         pygame.quit()
-        logging.info("Tetris game exited.")
+        print("Tetris game exited.")
+
+    def draw_score(self):
+        font = pygame.font.Font(None, 36)  # Use default font and size 36
+        score_surface = font.render(f'Score: {self.score}', True, (255, 255, 255))  # White color
+        self.screen.blit(score_surface, (self.grid.width * self.grid.block_size + 20, 20))  # Position to the right of the grid
 
     def draw_tetromino(self):
         if self.current_tetromino:  # Check if current tetromino is valid
             shape = self.current_tetromino.current_shape  # Use the current shape matrix
             color = self.current_tetromino.get_color()
 
-            # Add a log to verify the shape being drawn
-            logging.debug(f"Drawing Tetromino: shape: {shape}, color: {color}")
+            print(f"Drawing Tetromino: shape: {shape}, color: {color}")
 
             for y, row in enumerate(shape):
                 for x, block in enumerate(row):
@@ -84,36 +90,46 @@ class TetrisGame:
 
     def move_tetromino(self, dx, dy):
         new_position = [self.tetromino_position[0] + dy, self.tetromino_position[1] + dx]
+        print(f"Attempting to move tetromino to {new_position}")
 
         if self.grid.is_valid_position(self.current_tetromino, new_position):
             self.tetromino_position = new_position
-            logging.info(f"Moved tetromino to position: {self.tetromino_position}")
+            print(f"Moved tetromino to position: {self.tetromino_position}")
         else:
             if dy == 1:  # If moving down and collision occurs, place the tetromino
-                try:
-                    self.grid.place_tetromino(self.current_tetromino, self.tetromino_position)
-                    filled_rows = self.grid.clear_filled_rows()  # Clear filled rows after placing the tetromino
-                    logging.info(f"Filled rows cleared: {filled_rows}")  # Log cleared rows
-                    self.current_tetromino = Tetromino()  # Create a new tetromino
-                    self.tetromino_position = [0, self.grid.width // 2 - 1]  # Reset position
-                    if not self.grid.is_valid_position(self.current_tetromino, self.tetromino_position):
-                        logging.error("Game Over: New tetromino cannot be placed.")
-                        pygame.quit()
-                        sys.exit()
-                except ValueError as e:
-                    logging.error("Error placing tetromino: ", exc_info=True)
+                print("Tetromino cannot move down further, placing tetromino")
+                self.place_current_tetromino()
+
+    def place_current_tetromino(self):
+        try:
+            filled_rows = self.grid.place_tetromino(self.current_tetromino, self.tetromino_position)
+            print(f"place_current_tetromino: Filled rows: {filled_rows}")  # Debug print for filled rows
+            if filled_rows > 0:
+                self.update_score(filled_rows)
+            else:
+                print("No rows filled, update_score not called.")
+            self.current_tetromino = Tetromino()  # Create a new tetromino
+            self.tetromino_position = [0, self.grid.width // 2 - 1]  # Reset position
+            if not self.grid.is_valid_position(self.current_tetromino, self.tetromino_position):
+                print("Game Over: New tetromino cannot be placed.")
+                pygame.quit()
+                sys.exit()
+        except ValueError as e:
+            print(f"Error placing tetromino: {e}")
+
+    def update_score(self, filled_rows):
+        print(f"update_score: Filled rows cleared: {filled_rows}")  # Debug print cleared rows
+        self.score += filled_rows * 100  # Increment score by 100 for each row cleared
+        print(f"update_score: Score updated: {self.score}")  # Debug print the updated score
 
     def rotate_tetromino(self):
         original_shape = self.current_tetromino.current_shape  # Backup the original shape
 
-        # Rotate the tetromino with the current grid state and position
         if self.current_tetromino.rotate(self.grid.get_state(), self.tetromino_position):
-            # Check for collisions after rotation
             if not self.grid.is_valid_position(self.current_tetromino, self.tetromino_position):
-                # If there is a collision, revert to the original shape
                 self.current_tetromino.current_shape = original_shape
-                logging.warning(f"Collision detected, reverting rotation. Current position: {self.tetromino_position}, Original shape: {original_shape}")
+                print(f"Collision detected, reverting rotation. Current position: {self.tetromino_position}, Original shape: {original_shape}")
             else:
-                logging.info("Tetromino rotated successfully.")
+                print("Tetromino rotated successfully.")
         else:
-            logging.warning("Rotation failed, shape remains unchanged.")
+            print("Rotation failed, shape remains unchanged.")
