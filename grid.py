@@ -40,6 +40,7 @@ class Grid:
                         logging.warning(f"Tetromino position {position} is out of bounds.")
                         return  # Handle out-of-bounds gracefully
         logging.info(f"Tetromino placed at position: {position} with color: {color}")  # Log tetromino placement
+        self.clear_filled_rows()  # Clear filled rows after placing a tetromino
 
     def is_valid_position(self, tetromino, position):
         shape = tetromino.get_shape()
@@ -60,7 +61,7 @@ class Grid:
 
     def rotate_tetromino(self, tetromino):
         """Rotate the tetromino and check for valid position."""
-        original_shape = tetromino.shape  # Backup the original shape
+        original_shape = tetromino.get_shape()  # Backup the original shape
         if tetromino.rotate(self.get_state()):
             if not self.is_valid_position(tetromino, self.tetromino_position):
                 logging.warning("Rotation resulted in invalid position, reverting.")
@@ -71,3 +72,22 @@ class Grid:
         else:
             logging.warning("Rotation failed, shape remains unchanged.")
             return False
+
+    def check_filled_rows(self):
+        filled_rows = []
+        for y in range(self.height):
+            if all(self.grid[y]):  # Check if all columns in the row are filled
+                filled_rows.append(y)  # Add the filled row index to the list
+        logging.info(f"Filled rows detected: {filled_rows}")  # Log filled rows
+        return filled_rows
+
+    def clear_filled_rows(self):
+        filled_rows = self.check_filled_rows()  # Get filled rows
+        for row in filled_rows:
+            # Clear the filled row
+            self.grid.pop(row)  # Remove the filled row
+            # Insert a new empty row at the top
+            self.grid.insert(0, [0 for _ in range(self.width)])  # Add a new empty row at the top
+            self.color_grid.pop(row)  # Remove the color row
+            self.color_grid.insert(0, [(0, 0, 0) for _ in range(self.width)])  # Add new empty color row
+        logging.info(f"Cleared filled rows: {filled_rows}")  # Log cleared rows

@@ -92,6 +92,8 @@ class TetrisGame:
             if dy == 1:  # If moving down and collision occurs, place the tetromino
                 try:
                     self.grid.place_tetromino(self.current_tetromino, self.tetromino_position)
+                    filled_rows = self.grid.clear_filled_rows()  # Clear filled rows after placing the tetromino
+                    logging.info(f"Filled rows cleared: {filled_rows}")  # Log cleared rows
                     self.current_tetromino = Tetromino()  # Create a new tetromino
                     self.tetromino_position = [0, self.grid.width // 2 - 1]  # Reset position
                     if not self.grid.is_valid_position(self.current_tetromino, self.tetromino_position):
