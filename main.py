@@ -6,5 +6,3 @@ if __name__ == "__main__":
     game = TetrisGame()
     # Run the game
     game.run()
-
-    #testing

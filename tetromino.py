@@ -2,7 +2,7 @@ import random
 import logging
 
 # Configure logging
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)  # Set to INFO to reduce noise in production
 
 class Tetromino:
     shapes = {
@@ -34,7 +34,7 @@ class Tetromino:
     def __init__(self):
         self.shape = self.random_shape()
         self.color = self.colors[self.shape]
-        self.current_shape = self.get_shape()  # Store the current shape
+        self.current_shape = self.shapes[self.shape]  # Initialize current shape
         logging.debug(f"Tetromino created with shape: {self.shape} and color: {self.color}")
 
     def random_shape(self):
@@ -43,42 +43,45 @@ class Tetromino:
         return shape
 
     def get_shape(self):
-        shape = self.shapes[self.shape]
-        return shape
+        return self.current_shape  # Return the current shape matrix
 
     def get_color(self):
         return self.color
 
-    def rotate(self, grid_state):
+    def rotate(self, grid_state, position):
         logging.debug(f"Rotating Tetromino: current shape type before rotation: {self.shape}")
 
-        current_shape_matrix = self.get_shape()
-        rotated_shape = [list(row) for row in zip(*current_shape_matrix[::-1])]
+        rotated_shape = [list(row) for row in zip(*self.current_shape[::-1])]
         logging.debug(f"Tetromino rotated to shape: {rotated_shape}")
 
-        original_shape = self.get_shape()  # Get the original shape
+        original_shape = self.current_shape  # Store the original shape matrix
 
         # Check for valid rotation
-        if self.is_valid_rotation(rotated_shape, grid_state):
-            self.shapes[self.shape] = rotated_shape  # Store the rotated shape
+        if self.is_valid_rotation(rotated_shape, grid_state, position):
+            logging.debug(f"Rotation valid for shape: {self.shape}, updating shape.")
             self.current_shape = rotated_shape  # Update current shape
             logging.info("Tetromino rotated successfully.")
+            print(f"DEBUG: Tetromino rotated to shape: {self.current_shape}")
+            return True  # Indicate successful rotation
         else:
             logging.warning("Rotation invalid, reverting to original shape.")
-            self.shapes[self.shape] = original_shape  # Revert to original shape
-            self.current_shape = original_shape  # Restore current shape
+            self.current_shape = original_shape  # Restore original shape matrix
+            print(f"DEBUG: Tetromino remained as shape: {self.current_shape}")
+            return False  # Indicate failed rotation
 
-    def is_valid_rotation(self, rotated_shape, grid_state):
+    def is_valid_rotation(self, rotated_shape, grid_state, position):
         # Check for collisions with the grid boundaries and other tetrominoes
         for y, row in enumerate(rotated_shape):
             for x, block in enumerate(row):
                 if block:  # If the block is part of the tetromino
+                    new_x = position[1] + x
+                    new_y = position[0] + y
                     # Check if the position is out of bounds
-                    if x < 0 or x >= len(rotated_shape[0]) or y < 0 or y >= len(rotated_shape):
+                    if new_x < 0 or new_x >= len(grid_state[0]) or new_y < 0 or new_y >= len(grid_state):
                         logging.warning("Collision with grid boundary detected.")
                         return False
                     # Check for collisions with other tetrominoes
-                    if grid_state[y][x] != 0:  # Assuming grid_state is a 2D list
+                    if new_y >= 0 and grid_state[new_y][new_x] != 0:  # Assuming grid_state is a 2D list
                         logging.warning("Collision with another tetromino detected.")
                         return False
         return True

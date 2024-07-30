@@ -1,4 +1,5 @@
 import pygame
+import logging
 
 class Grid:
     def __init__(self, width=10, height=20, block_size=30):
@@ -36,8 +37,9 @@ class Grid:
                         self.grid[position[0] + y][position[1] + x] = 1  # Mark the grid as filled
                         self.color_grid[position[0] + y][position[1] + x] = color  # Store the color
                     else:
-                        raise ValueError("Tetromino position is out of bounds.")
-        print(f"Tetromino placed at position: {position} with color: {color}")  # Log tetromino placement
+                        logging.warning(f"Tetromino position {position} is out of bounds.")
+                        return  # Handle out-of-bounds gracefully
+        logging.info(f"Tetromino placed at position: {position} with color: {color}")  # Log tetromino placement
 
     def is_valid_position(self, tetromino, position):
         shape = tetromino.get_shape()
@@ -55,3 +57,17 @@ class Grid:
     def get_state(self):
         """Return the current state of the grid."""
         return self.grid  # Return the grid state for rotation logic
+
+    def rotate_tetromino(self, tetromino):
+        """Rotate the tetromino and check for valid position."""
+        original_shape = tetromino.shape  # Backup the original shape
+        if tetromino.rotate(self.get_state()):
+            if not self.is_valid_position(tetromino, self.tetromino_position):
+                logging.warning("Rotation resulted in invalid position, reverting.")
+                tetromino.shape = original_shape  # Revert to original shape if invalid
+                return False
+            logging.info("Tetromino rotated successfully.")
+            return True
+        else:
+            logging.warning("Rotation failed, shape remains unchanged.")
+            return False

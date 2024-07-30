@@ -1,13 +1,11 @@
 import pygame
 import sys
-import traceback
+import logging
 from tetromino import Tetromino
 from grid import Grid
 
-
 class TetrisGame:
     def __init__(self, width=10, height=20, block_size=30):
-
         # Initialize Pygame
         pygame.init()
 
@@ -18,7 +16,7 @@ class TetrisGame:
 
         # Setup the display
         self.screen = pygame.display.set_mode((self.screen_width, self.screen_height))
-        pygame.display.set_caption("Tetris8")
+        pygame.display.set_caption("Tetris")
 
         # Create grid
         self.grid = Grid(width, height, block_size)
@@ -30,7 +28,7 @@ class TetrisGame:
         self.current_tetromino = Tetromino()
         self.tetromino_position = [0, width // 2 - 1]  # Start at the top of the grid
 
-        print("Tetris game initialized.")
+        logging.info("Tetris game initialized.")
 
     def run(self):
         running = True
@@ -63,29 +61,33 @@ class TetrisGame:
                 self.clock.tick(self.fps)
 
             except Exception as e:
-                print("An error occurred: ", e)
-                traceback.print_exc()
+                logging.error("An error occurred: ", exc_info=True)
 
         pygame.quit()
-        print("Tetris game exited.")
+        logging.info("Tetris game exited.")
 
     def draw_tetromino(self):
-        shape = self.current_tetromino.get_shape()
-        color = self.current_tetromino.get_color()
-        for y, row in enumerate(shape):
-            for x, block in enumerate(row):
-                if block:  # If the block is part of the tetromino
-                    rect = pygame.Rect((self.tetromino_position[1] + x) * 30,
-                                       (self.tetromino_position[0] + y) * 30,
-                                       30, 30)
-                    pygame.draw.rect(self.screen, color, rect)
+        if self.current_tetromino:  # Check if current tetromino is valid
+            shape = self.current_tetromino.current_shape  # Use the current shape matrix
+            color = self.current_tetromino.get_color()
+
+            # Add a log to verify the shape being drawn
+            logging.debug(f"Drawing Tetromino: shape: {shape}, color: {color}")
+
+            for y, row in enumerate(shape):
+                for x, block in enumerate(row):
+                    if block:  # If the block is part of the tetromino
+                        rect = pygame.Rect((self.tetromino_position[1] + x) * 30,
+                                           (self.tetromino_position[0] + y) * 30,
+                                           30, 30)
+                        pygame.draw.rect(self.screen, color, rect)
 
     def move_tetromino(self, dx, dy):
         new_position = [self.tetromino_position[0] + dy, self.tetromino_position[1] + dx]
 
         if self.grid.is_valid_position(self.current_tetromino, new_position):
             self.tetromino_position = new_position
-            print(f"Moved tetromino to position: {self.tetromino_position}")
+            logging.info(f"Moved tetromino to position: {self.tetromino_position}")
         else:
             if dy == 1:  # If moving down and collision occurs, place the tetromino
                 try:
@@ -93,24 +95,23 @@ class TetrisGame:
                     self.current_tetromino = Tetromino()  # Create a new tetromino
                     self.tetromino_position = [0, self.grid.width // 2 - 1]  # Reset position
                     if not self.grid.is_valid_position(self.current_tetromino, self.tetromino_position):
-                        print("Game Over: New tetromino cannot be placed.")
+                        logging.error("Game Over: New tetromino cannot be placed.")
                         pygame.quit()
                         sys.exit()
                 except ValueError as e:
-                    print("Error placing tetromino: ", e)
-                    traceback.print_exc()
+                    logging.error("Error placing tetromino: ", exc_info=True)
 
     def rotate_tetromino(self):
-        # Backup the current shape to revert in case of collision
-        original_shape = self.current_tetromino.get_shape()
+        original_shape = self.current_tetromino.current_shape  # Backup the original shape
 
-        # Rotate the tetromino with the current grid state
-        self.current_tetromino.rotate(self.grid.get_state())
-
-        # Check for collisions after rotation
-        if not self.grid.is_valid_position(self.current_tetromino, self.tetromino_position):
-            # If there is a collision, revert to the original shape
-            self.current_tetromino.shape = original_shape
-            print(f"Collision detected, reverting rotation. Current position: {self.tetromino_position}, Original shape: {original_shape}")
+        # Rotate the tetromino with the current grid state and position
+        if self.current_tetromino.rotate(self.grid.get_state(), self.tetromino_position):
+            # Check for collisions after rotation
+            if not self.grid.is_valid_position(self.current_tetromino, self.tetromino_position):
+                # If there is a collision, revert to the original shape
+                self.current_tetromino.current_shape = original_shape
+                logging.warning(f"Collision detected, reverting rotation. Current position: {self.tetromino_position}, Original shape: {original_shape}")
+            else:
+                logging.info("Tetromino rotated successfully.")
         else:
-            print("Tetromino rotated successfully.")
+            logging.warning("Rotation failed, shape remains unchanged.")
