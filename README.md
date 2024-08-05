@@ -1,44 +1,54 @@
 ```markdown
 # tetris8
 
-tetris8 is a classic Tetris game implemented in Python using the Pygame library. Players can control falling tetromino pieces in a grid-based playing field, utilizing keyboard inputs to maneuver the pieces and clear rows.
+Tetris8 is a classic Tetris game implemented in Python using the Pygame library. Players can control falling tetromino pieces in a grid-based playing field, utilizing keyboard inputs to manipulate the pieces while aiming to clear rows and achieve high scores.
 
 ## Overview
 
-The architecture of tetris8 consists of a main game loop that manages user input, updates the game state, and renders the grid and tetrominoes. Key components include a `Grid` class for managing the grid's state and collision detection, and a `Tetromino` class for representing various tetromino shapes and their movements. This modular design facilitates future feature expansions.
+The architecture of Tetris8 consists of a main game loop that manages user input, updates the game state, and renders the grid and tetrominoes. The project is structured around key classes, including the `Grid` class for managing the grid state and collision detection, and the `Tetromino` class for representing various tetromino shapes and their movements. The application is built using Python and the Pygame library, ensuring a modular design that allows for future feature expansions.
 
-The project structure includes:
-- `main.py`: Entry point for the game.
-- `grid.py`: Contains the `Grid` class for grid management.
-- `tetromino.py`: Defines the `Tetromino` class for tetromino shapes.
-- `tetris_game.py`: Implements the main game logic and rendering.
-- `Tests/`: Directory containing unit tests for the game components.
+### Technologies Used
+- **Python**: The programming language used to implement the game.
+- **Pygame**: A library for creating games in Python, used for handling graphics and user input.
+
+### Project Structure
+- `main.py`: Entry point of the game, initializing Pygame and running the main game loop.
+- `grid.py`: Defines the `Grid` class for managing the game grid and collision detection.
+- `tetromino.py`: Defines the `Tetromino` class for managing tetromino shapes and colors.
+- `tetris_game.py`: Implements the core game logic and state management.
+- `Tests/`: Contains unit tests for various components of the game.
 
 ## Features
 
-- **Grid Creation**: A fixed-width and height grid (e.g., 10x20) for tetromino movement.
-- **Tetromino Types**: Seven distinct tetromino shapes (I, O, T, J, L, S, Z), each with a unique color.
-- **Tetromino Movement**: Control tetrominoes using arrow keys (left, right, down) and rotate using the up arrow key.
-- **Random Tetromino Generation**: A new random tetromino spawns at the top of the grid at the start of the game.
-- **Row-Clearing Functionality**: Clear filled rows and update the score accordingly.
-- **Game Over Condition**: The game ends when a new tetromino cannot be placed due to collisions, displaying a "Game Over" message.
+- **Grid Creation**: A grid-based playing field defined by a fixed width and height (e.g., 10x20) where tetrominoes can move.
+- **Tetromino Types**: Includes various tetromino shapes (I, O, T, J, L, S, Z), each represented by distinct colors.
+- **Tetromino Movement**: Players can control tetrominoes using keyboard inputs (left, right, down, and rotate).
+- **Collision Detection**: Prevents tetrominoes from moving outside the grid boundaries or overlapping with others.
+- **Random Tetromino Generation**: Spawns a random tetromino at the start of the game.
+- **Row-Clearing Functionality**: Clears filled rows and updates the score accordingly.
+- **Game Over Condition**: Ends the game when a new tetromino cannot be placed upon spawning.
+- **High Score Tracking**: Displays the current score and maintains a high score table for the session.
 
 ## Getting started
 
 ### Requirements
 
-- Python (version 3.6 or higher)
-- Pygame library (install via `pip install pygame`)
+- Python 3.x
+- Pygame library (install via pip: `pip install pygame`)
 
 ### Quickstart
 
-1. Clone the repository or download the source code.
-2. Navigate to the project directory.
+1. Clone the repository or download the project files.
+2. Navigate to the project directory in your terminal.
 3. Run the game using the command:
    ```bash
    python main.py
    ```
-4. Use the arrow keys to control the tetrominoes.
+4. Use the arrow keys to control the tetromino pieces:
+   - Left Arrow: Move left
+   - Right Arrow: Move right
+   - Down Arrow: Move down
+   - Up Arrow: Rotate tetromino (anticlockwise)
 
 ### License
 

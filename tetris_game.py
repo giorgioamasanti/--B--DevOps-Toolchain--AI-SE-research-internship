@@ -2,6 +2,7 @@ import pygame
 import sys
 from tetromino import Tetromino
 from grid import Grid
+from datetime import datetime  # Add this import at the beginning of the file
 
 class TetrisGame:
     def __init__(self, width=10, height=20, block_size=30):
@@ -26,16 +27,77 @@ class TetrisGame:
         self.drop_time = 0.75  # Time interval for dropping tetromino (750ms)
         self.last_drop_time = pygame.time.get_ticks() / 1000.0  # Track the last drop time in seconds
 
+        self.game_over = False  # New attribute to track game state
+
+        self.high_scores = []  # Initialize an empty list to store high scores
+
         print("Tetris game initialized. Falling delay set to 750ms.")
 
-    def draw_game_over(self):
-        font = pygame.font.Font(None, 74)  # Use a larger font for the game over message
-        game_over_surface = font.render('Game Over', True, (255, 0, 0))  # Red color
-        score_surface = font.render(f'Final Score: {self.score}', True, (255, 255, 255))  # White color for final score
+    def add_high_score(self, score):
+        """Add a new high score with the current timestamp."""
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")  # Get the current timestamp
+        self.high_scores.append((score, timestamp))  # Append the score and timestamp as a tuple
+        self.high_scores.sort(key=lambda x: x[0], reverse=True)  # Sort the scores in descending order
+        if len(self.high_scores) > 5:  # Keep only the top 5 scores
+            self.high_scores = self.high_scores[:5]
+        print(f"High scores updated: {self.high_scores}")  # Debug print for high scores
 
-        # Draw a black rectangle behind the text
-        rect_width = max(game_over_surface.get_width(), score_surface.get_width()) + 20
-        rect_height = game_over_surface.get_height() + score_surface.get_height() + 40  # Add space for score
+    def draw_high_score_table(self):
+        font = pygame.font.Font(None, 24)  # Use default font and size 24
+        x_offset = self.grid.width * self.grid.block_size + 20  # Position to the right of the grid
+        y_offset = 100  # Starting Y position for the high score table
+
+        # Draw the header for the high score table
+        header_surface = font.render('Score         Time', True, (255, 255, 255))  # White color
+        self.screen.blit(header_surface, (x_offset + 5, y_offset + 5))  # Adjusted position for padding
+
+        # Draw each high score, ensuring only the top 5 are displayed
+        for index, (score, timestamp) in enumerate(self.high_scores[:5]):  # Limit to the top 5 scores
+            score_surface = font.render(f'{score:04}         {timestamp}', True, (255, 255, 255))  # Format score to 4 digits
+            self.screen.blit(score_surface, (x_offset + 5, y_offset + 35 + index * 30))  # Adjusted position for padding
+
+        # Draw gridlines around the high score table
+        table_width = 200  # Width of the table
+        table_height = 180  # Height of the table
+        grid_color = (128, 128, 128)  # Grey color for gridlines
+
+        # Draw vertical lines
+        for i in range(1, 6):  # 5 rows, draw 4 vertical lines
+            pygame.draw.line(self.screen, grid_color, (x_offset, y_offset + i * 30), (x_offset + table_width, y_offset + i * 30), 1)
+
+        # Draw horizontal lines
+        pygame.draw.line(self.screen, grid_color, (x_offset, y_offset), (x_offset + table_width, y_offset), 1)  # Top border
+        pygame.draw.line(self.screen, grid_color, (x_offset, y_offset + table_height), (x_offset + table_width, y_offset + table_height), 1)  # Bottom border
+        pygame.draw.line(self.screen, grid_color, (x_offset, y_offset), (x_offset, y_offset + table_height), 1)  # Left border
+        pygame.draw.line(self.screen, grid_color, (x_offset + table_width, y_offset), (x_offset + table_width, y_offset + table_height), 1)  # Right border
+
+    def draw_high_scores(self):
+        font = pygame.font.Font(None, 24)  # Use default font and size 24
+        x_offset = self.grid.width * self.grid.block_size + 20  # Position to the right of the grid
+        y_offset = 100  # Starting Y position for high scores
+
+        # Draw the title for high scores
+        title_surface = font.render('High Scores', True, (255, 255, 255))  # White color
+        self.screen.blit(title_surface, (x_offset, y_offset))
+
+        # Draw each high score, ensuring only the top 5 are displayed
+        for index, (score, timestamp) in enumerate(self.high_scores[:5]):  # Limit to the top 5 scores
+            score_surface = font.render(f'{index + 1}. {score:04} - {timestamp}', True, (255, 255, 255))  # Format score to 4 digits
+            self.screen.blit(score_surface, (x_offset, y_offset + 30 + index * 30))  # Position each score below the last
+
+    def draw_game_over(self):
+        font = pygame.font.Font(None, 20)  # Adjusted font size for the game over message
+        game_over_surface = font.render('GAME OVER', True, (255, 0, 0))  # Red color
+        score_surface = font.render(f'Score: {self.score:04}', True, (255, 255, 255))  # Format final score to 4 digits
+        prompt_surface = font.render("Press 'N' for a new game", True, (255, 255, 255))  # New prompt for starting a new game
+
+        # Adjust the rectangle width and height to ensure it fits all text neatly
+        text_height = max(game_over_surface.get_height(), score_surface.get_height(), prompt_surface.get_height())
+        rect_height = text_height * 3 + 40  # Add padding between the text lines and around the edges
+        rect_width = max(game_over_surface.get_width(), score_surface.get_width(), prompt_surface.get_width()) + 80  # Increased padding
+
+        print(f"Game Over Screen Dimensions - Width: {rect_width}, Height: {rect_height}")
+
         rect_x = self.screen_width // 2 - rect_width // 2
         rect_y = self.screen_height // 2 - rect_height // 2
 
@@ -43,16 +105,56 @@ class TetrisGame:
         pygame.draw.rect(self.screen, (255, 0, 0), (rect_x, rect_y, rect_width, rect_height), 5)  # Red border
 
         self.screen.blit(game_over_surface, (self.screen_width // 2 - game_over_surface.get_width() // 2,
-                                              self.screen_height // 2 - game_over_surface.get_height() // 2 - 20))
+                                              self.screen_height // 2 - rect_height // 2 + 10))
         self.screen.blit(score_surface, (self.screen_width // 2 - score_surface.get_width() // 2,
-                                          self.screen_height // 2 + 20))  # Position the score below the game over message
+                                          self.screen_height // 2 - rect_height // 2 + 30))  # Position the score below the game over message
+        self.screen.blit(prompt_surface, (self.screen_width // 2 - prompt_surface.get_width() // 2,
+                                           self.screen_height // 2 - rect_height // 2 + 50))  # Position the prompt below the score
         pygame.display.flip()  # Update the display to show the game over message
-        pygame.time.wait(3000)  # Wait for 3 seconds before closing the game
+
+        print(f"Drawing Game Over Rectangle at X: {rect_x}, Y: {rect_y}")
+
+        # Log the dimensions of each text surface
+        print(f"Game Over Text Surface Dimensions - Game Over: {game_over_surface.get_width()}x{game_over_surface.get_height()}")
+        print(f"Score Text Surface Dimensions - Score: {score_surface.get_width()}x{score_surface.get_height()}")
+        print(f"Prompt Text Surface Dimensions - Prompt: {prompt_surface.get_width()}x{prompt_surface.get_height()}")
+
+        # Log the calculated rectangle dimensions before drawing
+        print(f"Final Game Over Rectangle Dimensions - Width: {rect_width}, Height: {rect_height}")
+
+        # Allow for immediate input handling
+        waiting = True
+        while waiting:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_n:  # Check for 'N' key press
+                        self.restart_game()  # Restart the game
+                        self.game_over = False  # Reset game over flag
+                        waiting = False  # Exit the waiting loop
+                    elif event.key == pygame.K_ESCAPE:  # Allow quitting the game
+                        pygame.quit()
+                        sys.exit()
+        print("Game restarted from game over screen.")  # Log for debugging
+
+    def restart_game(self):
+        """Reset the game state for a new game."""
+        self.grid.reset()  # Reset the grid
+        self.current_tetromino = Tetromino()  # Create a new tetromino
+        self.tetromino_position = [0, self.grid.width // 2 - 1]  # Reset tetromino position
+        self.score = 0  # Reset the score
+        self.last_drop_time = pygame.time.get_ticks() / 1000.0  # Reset drop time to current time
+        print("Game restarted.")
 
     def run(self):
         running = True
         while running:
             try:
+                if self.game_over:  # If game is over, skip the game logic
+                    continue
+
                 current_time = pygame.time.get_ticks() / 1000.0  # Get the current time in seconds
                 if current_time - self.last_drop_time >= self.drop_time:
                     print("Tetromino is about to drop.")
@@ -78,12 +180,15 @@ class TetrisGame:
 
                 self.draw_tetromino()
 
-                self.draw_score()  # Add this line to draw the score
+                self.draw_score()  # Draw the current score
+                self.draw_high_score_table()  # Draw the high score table
 
                 # Check for game over condition after placing the tetromino
                 if self.check_game_over():
-                    self.draw_game_over()  # Call the new method to display "Game Over"
-                    running = False  # End the game loop
+                    self.game_over = True  # Set game over flag
+                    self.add_high_score(self.score)  # Add the current score to high scores
+                    self.draw_game_over()  # Call to display "Game Over"
+                    continue  # Skip to next iteration to wait for user input
 
                 pygame.display.flip()
                 self.clock.tick(self.fps)
@@ -96,7 +201,7 @@ class TetrisGame:
 
     def draw_score(self):
         font = pygame.font.Font(None, 36)  # Use default font and size 36
-        score_surface = font.render(f'Score: {self.score}', True, (255, 255, 255))  # White color
+        score_surface = font.render(f'Score: {self.score:04}', True, (255, 255, 255))  # Format score to 4 digits
         self.screen.blit(score_surface, (self.grid.width * self.grid.block_size + 20, 20))  # Position to the right of the grid
 
     def draw_tetromino(self):
@@ -104,7 +209,7 @@ class TetrisGame:
             shape = self.current_tetromino.current_shape  # Use the current shape matrix
             color = self.current_tetromino.get_color()
 
-            print(f"Drawing Tetromino: shape: {shape}, color: {color}")
+            #print(f"Drawing Tetromino: shape: {shape}, color: {color}")
 
             for y, row in enumerate(shape):
                 for x, block in enumerate(row):
@@ -116,11 +221,11 @@ class TetrisGame:
 
     def move_tetromino(self, dx, dy):
         new_position = [self.tetromino_position[0] + dy, self.tetromino_position[1] + dx]
-        print(f"Attempting to move tetromino to {new_position}")
+        #print(f"Attempting to move tetromino to {new_position}")
 
         if self.grid.is_valid_position(self.current_tetromino, new_position):
             self.tetromino_position = new_position
-            print(f"Moved tetromino to position: {self.tetromino_position}")
+            #print(f"Moved tetromino to position: {self.tetromino_position}")
         else:
             if dy == 1:  # If moving down and collision occurs, place the tetromino
                 print("Tetromino cannot move down further, placing tetromino")
@@ -149,9 +254,9 @@ class TetrisGame:
             # Check for game over condition immediately after placing the tetromino
             if self.check_game_over():
                 print("Game Over: New tetromino cannot be placed.")
+                self.add_high_score(self.score)  # Add the current score to high scores
                 self.draw_game_over()  # Call the method to display "Game Over"
-                pygame.quit()  # Close the game window
-                sys.exit()  # Exit the program
+                # Removed pygame.quit() and sys.exit() to allow for game restart
         except (IndexError, ValueError) as e:  # Catch specific exceptions
             print(f"Error placing tetromino: {e}")  # Log the error message
 

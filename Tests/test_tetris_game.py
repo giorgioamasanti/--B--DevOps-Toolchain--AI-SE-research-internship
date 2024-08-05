@@ -80,8 +80,25 @@ class TestTetrisGame(unittest.TestCase):
         self.game.grid.is_valid_position = Mock(return_value=False)
         with patch('tetris_game.Tetromino', return_value=TetrominoMock('O')):  # Ensure new tetromino is a mock
             self.game.place_current_tetromino()
+            self.assertTrue(self.game.game_over)
             mock_quit.assert_called_once()
             mock_exit.assert_called_once()
+
+    def test_high_score_formatting(self):
+        self.game.add_high_score(0)
+        self.game.add_high_score(100)
+        self.game.add_high_score(1000)
+        self.assertEqual(self.game.high_scores[0][0], 0)
+        self.assertEqual(self.game.high_scores[1][0], 100)
+        self.assertEqual(self.game.high_scores[2][0], 1000)
+
+        # Check if the high score table displays correctly formatted scores
+        self.game.draw_high_score_table()
+        # Here we would need to check the rendered output, but since we can't do that in a unit test,
+        # we will just ensure that the high scores are stored correctly.
+        self.assertEqual(self.game.high_scores[0][0], 0)
+        self.assertEqual(self.game.high_scores[1][0], 100)
+        self.assertEqual(self.game.high_scores[2][0], 1000)
 
 if __name__ == "__main__":
     pygame.init()
