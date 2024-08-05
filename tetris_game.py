@@ -28,6 +28,27 @@ class TetrisGame:
 
         print("Tetris game initialized. Falling delay set to 750ms.")
 
+    def draw_game_over(self):
+        font = pygame.font.Font(None, 74)  # Use a larger font for the game over message
+        game_over_surface = font.render('Game Over', True, (255, 0, 0))  # Red color
+        score_surface = font.render(f'Final Score: {self.score}', True, (255, 255, 255))  # White color for final score
+
+        # Draw a black rectangle behind the text
+        rect_width = max(game_over_surface.get_width(), score_surface.get_width()) + 20
+        rect_height = game_over_surface.get_height() + score_surface.get_height() + 40  # Add space for score
+        rect_x = self.screen_width // 2 - rect_width // 2
+        rect_y = self.screen_height // 2 - rect_height // 2
+
+        pygame.draw.rect(self.screen, (0, 0, 0), (rect_x, rect_y, rect_width, rect_height))  # Black rectangle
+        pygame.draw.rect(self.screen, (255, 0, 0), (rect_x, rect_y, rect_width, rect_height), 5)  # Red border
+
+        self.screen.blit(game_over_surface, (self.screen_width // 2 - game_over_surface.get_width() // 2,
+                                              self.screen_height // 2 - game_over_surface.get_height() // 2 - 20))
+        self.screen.blit(score_surface, (self.screen_width // 2 - score_surface.get_width() // 2,
+                                          self.screen_height // 2 + 20))  # Position the score below the game over message
+        pygame.display.flip()  # Update the display to show the game over message
+        pygame.time.wait(3000)  # Wait for 3 seconds before closing the game
+
     def run(self):
         running = True
         while running:
@@ -58,6 +79,11 @@ class TetrisGame:
                 self.draw_tetromino()
 
                 self.draw_score()  # Add this line to draw the score
+
+                # Check for game over condition after placing the tetromino
+                if self.check_game_over():
+                    self.draw_game_over()  # Call the new method to display "Game Over"
+                    running = False  # End the game loop
 
                 pygame.display.flip()
                 self.clock.tick(self.fps)
@@ -100,6 +126,13 @@ class TetrisGame:
                 print("Tetromino cannot move down further, placing tetromino")
                 self.place_current_tetromino()
 
+    def check_game_over(self):
+        """Check if the game is over (i.e., if a new tetromino collides on spawn)."""
+        if not self.grid.is_valid_position(self.current_tetromino, self.tetromino_position):
+            print("Game Over: New tetromino cannot be placed.")
+            return True
+        return False
+
     def place_current_tetromino(self):
         try:
             filled_rows = self.grid.place_tetromino(self.current_tetromino, self.tetromino_position)
@@ -108,14 +141,19 @@ class TetrisGame:
                 self.update_score(filled_rows)
             else:
                 print("No rows filled, update_score not called.")
+
+            # Create a new tetromino
             self.current_tetromino = Tetromino()  # Create a new tetromino
             self.tetromino_position = [0, self.grid.width // 2 - 1]  # Reset position
-            if not self.grid.is_valid_position(self.current_tetromino, self.tetromino_position):
+
+            # Check for game over condition immediately after placing the tetromino
+            if self.check_game_over():
                 print("Game Over: New tetromino cannot be placed.")
-                pygame.quit()
-                sys.exit()
-        except ValueError as e:
-            print(f"Error placing tetromino: {e}")
+                self.draw_game_over()  # Call the method to display "Game Over"
+                pygame.quit()  # Close the game window
+                sys.exit()  # Exit the program
+        except (IndexError, ValueError) as e:  # Catch specific exceptions
+            print(f"Error placing tetromino: {e}")  # Log the error message
 
     def update_score(self, filled_rows):
         print(f"update_score: Filled rows cleared: {filled_rows}")  # Debug print cleared rows
