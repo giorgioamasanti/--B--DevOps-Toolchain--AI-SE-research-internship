@@ -1,40 +1,42 @@
 ```markdown
 # tetris8
 
-Tetris8 is a classic Tetris game implemented in Python using the Pygame library. Players can control falling tetromino pieces in a grid-based playing field, utilizing keyboard inputs to manipulate the pieces while aiming to clear rows and achieve high scores.
+tetris8 is a classic Tetris game implemented in Python using the Pygame library. Players can control falling tetromino pieces within a grid-based playing field using keyboard inputs. The game emphasizes modularity and clear software design, allowing for future feature expansions.
 
 ## Overview
 
-The architecture of Tetris8 consists of a main game loop that manages user input, updates the game state, and renders the grid and tetrominoes. The project is structured around key classes, including the `Grid` class for managing the grid state and collision detection, and the `Tetromino` class for representing various tetromino shapes and their movements. The application is built using Python and the Pygame library, ensuring a modular design that allows for future feature expansions.
+The architecture of the tetris8 project consists of a main game loop that manages user input, updates the game state, and renders the grid and tetrominoes. The project includes a `Grid` class for handling the grid's state and collision detection, and a `Tetromino` class that represents the different tetromino shapes and their movements. The application is structured to ensure modularity and ease of future enhancements.
 
-### Technologies Used
-- **Python**: The programming language used to implement the game.
-- **Pygame**: A library for creating games in Python, used for handling graphics and user input.
+### Technologies
+
+- **Python**: The programming language used to develop the Tetris game.
+- **Pygame**: A library that facilitates game development in Python, handling graphics and user input.
 
 ### Project Structure
-- `main.py`: Entry point of the game, initializing Pygame and running the main game loop.
-- `grid.py`: Defines the `Grid` class for managing the game grid and collision detection.
-- `tetromino.py`: Defines the `Tetromino` class for managing tetromino shapes and colors.
-- `tetris_game.py`: Implements the core game logic and state management.
-- `Tests/`: Contains unit tests for various components of the game.
+
+- `main.py`: The main entry point for the game, initializing Pygame and running the game loop.
+- `grid.py`: Contains the `Grid` class for managing the grid layout and collision detection.
+- `tetromino.py`: Defines the `Tetromino` class, representing the shapes and colors of tetrominoes.
+- `tetris_game.py`: Implements the game logic, including tetromino movement and scoring.
+- `Tests/`: Contains unit tests for various components of the game to ensure functionality and correctness.
 
 ## Features
 
-- **Grid Creation**: A grid-based playing field defined by a fixed width and height (e.g., 10x20) where tetrominoes can move.
-- **Tetromino Types**: Includes various tetromino shapes (I, O, T, J, L, S, Z), each represented by distinct colors.
-- **Tetromino Movement**: Players can control tetrominoes using keyboard inputs (left, right, down, and rotate).
-- **Collision Detection**: Prevents tetrominoes from moving outside the grid boundaries or overlapping with others.
-- **Random Tetromino Generation**: Spawns a random tetromino at the start of the game.
-- **Row-Clearing Functionality**: Clears filled rows and updates the score accordingly.
-- **Game Over Condition**: Ends the game when a new tetromino cannot be placed upon spawning.
-- **High Score Tracking**: Displays the current score and maintains a high score table for the session.
+- **Grid Creation**: A grid-based playing field (10x20) where tetrominoes can move.
+- **Tetromino Types**: Seven distinct tetromino shapes (I, O, T, J, L, S, Z), each represented by a unique color.
+- **Tetromino Movement**: Players can control tetrominoes using the arrow keys to move left, right, down, and rotate.
+- **Random Tetromino Generation**: A new tetromino is spawned at the top of the grid at the start of each game.
+- **Row-Clearing Functionality**: Rows are cleared when filled, and the score increases accordingly.
+- **Game Over State**: The game ends when a new tetromino cannot be placed due to collisions, displaying a "Game Over" message.
+- **High Score Tracking**: Tracks and displays the top scores for the current session, along with timestamps.
 
 ## Getting started
 
 ### Requirements
 
-- Python 3.x
-- Pygame library (install via pip: `pip install pygame`)
+To run the project, ensure you have the following installed on your computer:
+- Python (version 3.x)
+- Pygame library (install via `pip install pygame`)
 
 ### Quickstart
 
@@ -44,11 +46,7 @@ The architecture of Tetris8 consists of a main game loop that manages user input
    ```bash
    python main.py
    ```
-4. Use the arrow keys to control the tetromino pieces:
-   - Left Arrow: Move left
-   - Right Arrow: Move right
-   - Down Arrow: Move down
-   - Up Arrow: Rotate tetromino (anticlockwise)
+4. Use the arrow keys to control the tetrominoes and enjoy the game!
 
 ### License
 

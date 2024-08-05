@@ -8,7 +8,7 @@ class TetrisGame:
     def __init__(self, width=10, height=20, block_size=30):
         pygame.init()
 
-        self.screen_width = width * block_size + 200  # Add 200 pixels for the score display
+        self.screen_width = width * block_size + 300  # Adjusted width for the score display to fit high score table
         self.screen_height = height * block_size
         self.fps = 60
 
@@ -47,23 +47,42 @@ class TetrisGame:
         x_offset = self.grid.width * self.grid.block_size + 20  # Position to the right of the grid
         y_offset = 100  # Starting Y position for the high score table
 
+        # Draw the title for the high score table
+        title_surface = font.render('Current Session', True, (255, 255, 255))  # White color
+        self.screen.blit(title_surface, (x_offset, y_offset - 30))  # Position the title above the table
+
+        # Draw the header background
+        header_background_rect = pygame.Rect(x_offset, y_offset, 300, 30)  # Adjusted width for header
+        pygame.draw.rect(self.screen, (128, 128, 128), header_background_rect)  # Grey background for header
+
         # Draw the header for the high score table
-        header_surface = font.render('Score         Time', True, (255, 255, 255))  # White color
-        self.screen.blit(header_surface, (x_offset + 5, y_offset + 5))  # Adjusted position for padding
+        header_surface = font.render('Score     Time', True, (0, 0, 0))  # Black text
+        self.screen.blit(header_surface, (x_offset + 25, y_offset + 5))  # Adjusted position for padding (10 pixels to the right)
+        print(f"Header drawn at: ({x_offset + 25}, {y_offset + 5}) with width: {header_surface.get_width()} and height: {header_surface.get_height()}")
 
         # Draw each high score, ensuring only the top 5 are displayed
         for index, (score, timestamp) in enumerate(self.high_scores[:5]):  # Limit to the top 5 scores
-            score_surface = font.render(f'{score:04}         {timestamp}', True, (255, 255, 255))  # Format score to 4 digits
+            score_surface = font.render(f'{score:04}', True, (255, 255, 255))  # Format score to 4 digits
+            time_surface = font.render(timestamp, True, (255, 255, 255))  # Render the timestamp
+            time_width = time_surface.get_width() * 0.75  # Reduce the width of the time column by 25%
+
             self.screen.blit(score_surface, (x_offset + 5, y_offset + 35 + index * 30))  # Adjusted position for padding
+            self.screen.blit(time_surface, (x_offset + 5 + time_width + 10, y_offset + 35 + index * 30))  # Position timestamp next to score
+
+            print(f"Score drawn at: ({x_offset + 5}, {y_offset + 35 + index * 30}) with width: {score_surface.get_width()} and height: {score_surface.get_height()}")
 
         # Draw gridlines around the high score table
-        table_width = 200  # Width of the table
+        table_width = 300  # Adjusted width of the table
         table_height = 180  # Height of the table
         grid_color = (128, 128, 128)  # Grey color for gridlines
 
         # Draw vertical lines
         for i in range(1, 6):  # 5 rows, draw 4 vertical lines
             pygame.draw.line(self.screen, grid_color, (x_offset, y_offset + i * 30), (x_offset + table_width, y_offset + i * 30), 1)
+
+        # Adjust the vertical line position based on the width of the "Score" text
+        score_width = header_surface.get_width() * 0.75  # Calculate the width of the score text (25% less)
+        pygame.draw.line(self.screen, grid_color, (x_offset + score_width, y_offset), (x_offset + score_width, y_offset + table_height), 1)  # Vertical line at calculated position
 
         # Draw horizontal lines
         pygame.draw.line(self.screen, grid_color, (x_offset, y_offset), (x_offset + table_width, y_offset), 1)  # Top border
