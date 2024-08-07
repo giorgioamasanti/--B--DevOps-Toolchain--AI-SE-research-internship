@@ -16,6 +16,7 @@ class Tetromino:
         'Z': [[1, 1, 0],
               [0, 1, 1]]
     }
+    
 
     colors = {
         'I': (0, 255, 255),  # Cyan
