@@ -8,7 +8,7 @@ class TetrisGame:
     def __init__(self, width=10, height=20, block_size=30):
         pygame.init()
 
-        self.screen_width = width * block_size + 300  # Adjusted width for the score display to fit high score table
+        self.screen_width = width * block_size + 350  # Adjusted width for the score display to fit high score table
         self.screen_height = height * block_size
         self.fps = 60
 
