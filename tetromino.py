@@ -18,7 +18,7 @@ class Tetromino:
     }
 
     colors = {
-        'I': (0, 255, 255),  # Cyan
+        'I': (0, 255, 255),  # Cyan (light blue)
         'O': (255, 255, 0),  # Yellow
         'T': (128, 0, 128),  # Purple
         'J': (0, 0, 255),    # Blue
