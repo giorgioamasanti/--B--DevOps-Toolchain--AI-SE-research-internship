@@ -1,10 +1,17 @@
+dist: bionic  # Use a more recent Ubuntu distribution
 language: python
 python:
-  - "3.12"
+  - "3.9"  # Use a supported and stable Python version
 
+# Enable caching to speed up build times and reduce network dependency
+cache:
+  pip: true
+
+# Command to install dependencies
 install:
   - pip install -r requirements.txt
 
+# Command to run tests and linting
 script:
   - pytest
   - flake8 .
