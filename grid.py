@@ -9,7 +9,7 @@ class Grid:
         self.color_grid = [[(0, 0, 0) for _ in range(width)] for _ in range(height)]  # New grid for colors
 
     def draw(self, surface):
-        surface.fill((0, 0, 0))
+        surface.fill((100, 100, 100))
         for y in range(self.height):
             for x in range(self.width):
                 rect = pygame.Rect(x * self.block_size, y * self.block_size, self.block_size, self.block_size)
