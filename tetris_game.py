@@ -31,6 +31,9 @@ class TetrisGame:
 
         self.high_scores = []  # Initialize an empty list to store high scores
 
+        self.level_up_message = False  # Initialize level up message flag
+        self.level_up_timer = 0  # Timer for level up message display
+
         print("Tetris game initialized. Falling delay set to 750ms.")
 
     def add_high_score(self, score):
@@ -41,6 +44,32 @@ class TetrisGame:
         if len(self.high_scores) > 5:  # Keep only the top 5 scores
             self.high_scores = self.high_scores[:5]
         print(f"High scores updated: {self.high_scores}")  # Debug print for high scores
+
+    def adjust_drop_speed(self):
+        """Adjust the drop speed based on the score."""
+        if self.score >= 1400:
+            new_drop_time = 0.1
+        elif self.score >= 1200:
+            new_drop_time = 0.2
+        elif self.score >= 1000:
+            new_drop_time = 0.3
+        elif self.score >= 800:
+            new_drop_time = 0.4
+        elif self.score >= 600:
+            new_drop_time = 0.5
+        elif self.score >= 400:
+            new_drop_time = 0.6
+        elif self.score >= 200:
+            new_drop_time = 0.7
+        else:
+            new_drop_time = 0.75
+
+        # Check if the drop time has changed
+        if new_drop_time != self.drop_time:
+            self.drop_time = new_drop_time
+            self.level_up_message = True  # Set flag to show level up message
+            self.level_up_timer = pygame.time.get_ticks() / 1000.0  # Reset the timer in seconds
+            print(f"Drop speed adjusted to: {self.drop_time} seconds, Level Up Message triggered.")  # Log the adjustment
 
     def draw_high_score_table(self):
         font = pygame.font.Font(None, 24)  # Use default font and size 24
@@ -180,6 +209,8 @@ class TetrisGame:
                     self.move_tetromino(0, 1)  # Move tetromino down
                     self.last_drop_time = current_time  # Reset the last drop time
 
+                self.adjust_drop_speed()  # Call to adjust drop speed based on score
+
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
                         running = False
@@ -208,6 +239,16 @@ class TetrisGame:
                     self.add_high_score(self.score)  # Add the current score to high scores
                     self.draw_game_over()  # Call to display "Game Over"
                     continue  # Skip to next iteration to wait for user input
+
+                if self.level_up_message:
+                    if (current_time - self.level_up_timer) < 2:  # Display for 2 seconds
+                        # Display the level up message
+                        level_up_surface = pygame.font.Font(None, 48).render('Level Up!', True, (255, 255, 0))  # Yellow text
+                        self.screen.blit(level_up_surface, (self.screen_width // 2 - level_up_surface.get_width() // 2, self.screen_height // 2 - level_up_surface.get_height() // 2))
+                        print("Level Up message displayed.")  # Log when the message is displayed
+                    else:
+                        self.level_up_message = False  # Reset the level up message flag after display time
+                        print("Level Up message cleared.")  # Log when the message is cleared
 
                 pygame.display.flip()
                 self.clock.tick(self.fps)
