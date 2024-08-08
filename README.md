@@ -3,7 +3,7 @@
 
 tetris8 is a classic Tetris game implemented in Python using the Pygame library. Players can control falling tetromino pieces in a grid-based playing field, aiming to clear rows and achieve high scores. The game emphasizes modular design, allowing for future feature expansions.
 
-## Overview
+## Overview 
 
 The architecture of tetris8 consists of a main game loop that manages user input, updates the game state, and renders the grid and tetrominoes. The project is structured around key classes, including `Grid` for managing the playing field and `Tetromino` for representing the various tetromino shapes. The application is built using Python and the Pygame library, ensuring a modular design for future enhancements.
 
