@@ -6,9 +6,6 @@ on:
   pull_request:
     branches: [ "master" ]
 
-permissions:
-  contents: read
-
 jobs:
   build:
     runs-on: ${{ matrix.os }}
@@ -45,32 +42,32 @@ jobs:
 
       - name: Rename executable (Linux)
         if: matrix.os == 'ubuntu-latest'
-        run: mv dist/main dist/main-linux
+        run: mv dist/main dist/Tetris-B-Linux
       - name: Rename executable (macOS)
         if: matrix.os == 'macos-latest'
-        run: mv dist/main dist/main-macos
+        run: mv dist/main dist/Tetris-B-macos
       - name: Rename executable (Windows)
         if: matrix.os == 'windows-latest'
-        run: mv dist/main.exe dist/main-windows.exe
+        run: mv dist/main.exe dist/Tetris-B-windows.exe
 
       - name: Upload artifact for Ubuntu
         if: matrix.os == 'ubuntu-latest'
         uses: actions/upload-artifact@v2
         with:
-          name: main-ubuntu
-          path: dist/main-linux
+          name: Tetris-B-Linux
+          path: dist/Tetris-B-Linux
       - name: Upload artifact for macOS
         if: matrix.os == 'macos-latest'
         uses: actions/upload-artifact@v2
         with:
-          name: main-macos
-          path: dist/main-macos
+          name: Tetris-B-macos
+          path: dist/Tetris-B-macos
       - name: Upload artifact for Windows
         if: matrix.os == 'windows-latest'
         uses: actions/upload-artifact@v2
         with:
-          name: main-windows
-          path: dist/main-windows.exe
+          name: Tetris-B-windows
+          path: dist/Tetris-B-windows.exe
 
   cd:
     name: Continuous Deployment
@@ -81,24 +78,24 @@ jobs:
       - name: Download artifact for Ubuntu
         uses: actions/download-artifact@v2
         with:
-          name: main-ubuntu
+          name: Tetris-B-Linux
           path: ./dist/
       - name: Download artifact for macOS
         uses: actions/download-artifact@v2
         with:
-          name: main-macos
+          name: Tetris-B-macos
           path: ./dist/
       - name: Download artifact for Windows
         uses: actions/download-artifact@v2
         with:
-          name: main-windows
+          name: Tetris-B-windows
           path: ./dist/
 
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.PAT }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: v1.0.${{ github.run_number }}
           release_name: Release v1.0.${{ github.run_number }}
@@ -108,29 +105,29 @@ jobs:
       - name: Upload Release Asset for Linux
         uses: actions/upload-release-asset@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.PAT }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./dist/main-linux
-          asset_name: main-linux
+          asset_path: ./dist/Tetris-B-Linux
+          asset_name: Tetris-B-Linux
           asset_content_type: application/octet-stream
 
       - name: Upload Release Asset for macOS
         uses: actions/upload-release-asset@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.PAT }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./dist/main-macos
-          asset_name: main-macos
+          asset_path: ./dist/Tetris-B-macos
+          asset_name: Tetris-B-macos
           asset_content_type: application/octet-stream
 
       - name: Upload Release Asset for Windows
         uses: actions/upload-release-asset@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.PAT }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./dist/main-windows.exe
-          asset_name: main-windows.exe
+          asset_path: ./dist/Tetris-B-windows.exe
+          asset_name: Tetris-B-windows.exe
           asset_content_type: application/octet-stream
