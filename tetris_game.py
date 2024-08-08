@@ -242,10 +242,17 @@ class TetrisGame:
 
                 if self.level_up_message:
                     if (current_time - self.level_up_timer) < 2:  # Display for 2 seconds
-                        # Display the level up message
-                        level_up_surface = pygame.font.Font(None, 48).render('Level Up!', True, (255, 255, 0))  # Yellow text
-                        self.screen.blit(level_up_surface, (self.screen_width // 2 - level_up_surface.get_width() // 2, self.screen_height // 2 - level_up_surface.get_height() // 2))
-                        print("Level Up message displayed.")  # Log when the message is displayed
+                        # Create a white box behind the level up text
+                        level_up_surface = pygame.font.Font(None, 48).render('Level Up!', True, (0, 0, 0))  # Black text
+                        box_width = level_up_surface.get_width() + 20  # Add padding to the box width
+                        box_height = level_up_surface.get_height() + 10  # Add padding to the box height
+                        box_x = self.screen_width // 2 - box_width // 2  # Center the box horizontally
+                        box_y = self.screen_height // 2 - box_height // 2  # Center the box vertically
+
+                        # Draw the white box
+                        pygame.draw.rect(self.screen, (255, 255, 255), (box_x, box_y, box_width, box_height))  # White box
+                        self.screen.blit(level_up_surface, (self.screen_width // 2 - level_up_surface.get_width() // 2, self.screen_height // 2 - level_up_surface.get_height() // 2))  # Draw text
+                        print("Level Up message displayed with background box.")  # Log when the message is displayed
                     else:
                         self.level_up_message = False  # Reset the level up message flag after display time
                         print("Level Up message cleared.")  # Log when the message is cleared
