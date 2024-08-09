@@ -36,7 +36,7 @@ jobs:
 
       - name: Build executable
         run: |
-          pyinstaller --onefile main.py
+          pyinstaller --onefile --windowed main.py
         env:
           VERSION: ${{ github.sha }}
 
