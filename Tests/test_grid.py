@@ -7,6 +7,7 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from grid import Grid
+import pygame
 
 class TetrominoMock:
     def __init__(self, shape, color):
@@ -72,6 +73,25 @@ class TestGrid(unittest.TestCase):
         tetromino = TetrominoMock([[1, 1, 1], [0, 1, 0]], (0, 255, 0))
         self.assertTrue(self.grid.rotate_tetromino(tetromino))
         self.assertEqual(tetromino.get_shape(), [[0, 1], [1, 1], [0, 1]])
+
+    def test_draw(self):
+        pygame.init()
+        screen = pygame.display.set_mode((self.grid.width * self.grid.block_size, self.grid.height * self.grid.block_size))
+        self.grid.draw(screen)
+        pygame.display.flip()
+        pygame.time.wait(1000)  # Wait for 1 second to see the drawn grid
+        pygame.quit()
+
+    def test_is_valid_position(self):
+        tetromino = TetrominoMock([[1, 1], [1, 1]], (255, 0, 0))
+        self.grid.grid[0][0] = 1
+        self.assertFalse(self.grid.is_valid_position(tetromino, (0, 0)))
+        self.assertTrue(self.grid.is_valid_position(tetromino, (1, 1)))
+        self.assertFalse(self.grid.is_valid_position(tetromino, (19, 9)))
+
+    def test_get_state(self):
+        expected_state = [[0 for _ in range(self.grid.width)] for _ in range(self.grid.height)]
+        self.assertEqual(self.grid.get_state(), expected_state)
 
 if __name__ == "__main__":
     pygame.init()
