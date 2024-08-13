@@ -194,6 +194,7 @@ class TetrisGame:
         self.tetromino_position = [0, self.grid.width // 2 - 1]  # Reset tetromino position
         self.score = 0  # Reset the score
         self.last_drop_time = pygame.time.get_ticks() / 1000.0  # Reset drop time to current time
+        self.game_over = False  # Ensure game_over is reset
         print("Game restarted.")
 
     def run(self):
