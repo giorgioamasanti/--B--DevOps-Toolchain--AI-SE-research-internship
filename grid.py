@@ -1,4 +1,5 @@
 import pygame
+import os
 
 class Grid:
     def __init__(self, width=10, height=20, block_size=30):
@@ -7,6 +8,8 @@ class Grid:
         self.block_size = block_size
         self.grid = [[0 for _ in range(width)] for _ in range(height)]
         self.color_grid = [[(0, 0, 0) for _ in range(width)] for _ in range(height)]  # New grid for colors
+        self.tetromino_place_sound = pygame.mixer.Sound(os.path.join(os.path.dirname(__file__), 'assets/solidify.mp3'))  # Load sound effect
+        print("Tetromino placement sound loaded successfully")  # Log sound loading
 
     def draw(self, surface):
         surface.fill((0, 0, 0))
@@ -35,10 +38,10 @@ class Grid:
                         self.grid[position[0] + y][position[1] + x] = 1  # Mark the grid as filled
                         self.color_grid[position[0] + y][position[1] + x] = color  # Store the color
                     else:
-                        # print(f"Tetromino position {position} is out of bounds.")
+                        print(f"Tetromino position {position} is out of bounds.")
                         return 0  # Handle out-of-bounds gracefully
-        # print(f"Tetromino placed at position: {position} with color: {color}")  # Log tetromino placement
         filled_rows = self.clear_filled_rows()  # Clear filled rows after placing a tetromino
+        self.tetromino_place_sound.play()  # Play sound effect when tetromino is placed
         print(f"place_tetromino: Filled rows cleared: {filled_rows}")  # Debug print for filled rows
         return filled_rows  # Return the number of filled rows cleared
 
@@ -64,13 +67,13 @@ class Grid:
         original_shape = tetromino.get_shape()  # Backup the original shape
         if tetromino.rotate(self.get_state()):
             if not self.is_valid_position(tetromino, self.tetromino_position):
-                # print("Rotation resulted in invalid position, reverting.")
+                print("Rotation resulted in invalid position, reverting.")
                 tetromino.shape = original_shape  # Revert to original shape if invalid
                 return False
-            # print("Tetromino rotated successfully.")
+            print("Tetromino rotated successfully.")
             return True
         else:
-            # print("Rotation failed, shape remains unchanged.")
+            print("Rotation failed, shape remains unchanged.")
             return False
 
     def check_filled_rows(self):
@@ -88,6 +91,5 @@ class Grid:
             self.grid.insert(0, [0 for _ in range(self.width)])  # Add a new empty row at the top
             self.color_grid.pop(row)  # Remove the color row
             self.color_grid.insert(0, [(0, 0, 0) for _ in range(self.width)])  # Add new empty color row
-        # print(f"Cleared filled rows: {filled_rows}")  # Log cleared rows
         print(f"clear_filled_rows: Cleared filled rows: {filled_rows}")  # Debug print for filled rows
         return len(filled_rows)  # Return the number of cleared rows

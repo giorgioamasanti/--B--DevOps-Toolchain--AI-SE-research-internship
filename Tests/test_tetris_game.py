@@ -55,6 +55,11 @@ class TestTetrisGame(unittest.TestCase):
             self.assertIsInstance(self.game.current_tetromino, TetrominoMock)
             self.assertEqual(self.game.tetromino_position, [0, self.game.grid.width // 2 - 1])
 
+            # Check if sound is played when tetromino is placed
+            self.game.tetromino_place_sound.play = Mock()
+            self.game.place_current_tetromino()
+            self.game.tetromino_place_sound.play.assert_called_once()  # Ensure sound is played
+
     def test_update_score(self):
         initial_score = self.game.score
         self.game.update_score(2)  # Assume 2 rows cleared
@@ -165,7 +170,7 @@ class TestTetrisGame(unittest.TestCase):
         mock_screen.blit.assert_any_call(title_surface, (x_offset, y_offset))
 
     @patch('pygame.display.set_mode')
-    def test_draw_high_scores(self, mock_set_mode):
+    def test_draw_high_scores_duplicate(self, mock_set_mode):
         # Setup
         mock_screen = MagicMock()
         mock_set_mode.return_value = mock_screen

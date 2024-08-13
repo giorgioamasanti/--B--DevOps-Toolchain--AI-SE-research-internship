@@ -1,5 +1,6 @@
 import pygame
 import sys
+import os
 from tetromino import Tetromino
 from grid import Grid
 from datetime import datetime  # Add this import at the beginning of the file
@@ -34,7 +35,19 @@ class TetrisGame:
         self.level_up_message = False  # Initialize level up message flag
         self.level_up_timer = 0  # Timer for level up message display
 
+        pygame.mixer.init()  # Initialize the mixer
+        self.tetromino_place_sound = pygame.mixer.Sound(os.path.join(os.path.dirname(__file__), 'assets/solidify.mp3'))  # Updated sound effect path
+        print("Tetromino placement sound loaded successfully.")  # Log sound loading
+
+        self.play_background_music()  # Start playing background music when the game initializes
+
         print("Tetris game initialized. Falling delay set to 750ms.")
+
+    def play_background_music(self):
+        """Play background music continuously."""
+        pygame.mixer.music.load(os.path.join(os.path.dirname(__file__), 'assets/background_music.mp3'))
+        pygame.mixer.music.set_volume(0.5)  # Set volume (0.0 to 1.0)
+        pygame.mixer.music.play(-1)  # -1 means the music will loop indefinitely
 
     def add_high_score(self, score):
         """Add a new high score with the current timestamp."""
@@ -314,6 +327,9 @@ class TetrisGame:
                 self.update_score(filled_rows)
             else:
                 print("No rows filled, update_score not called.")
+
+            # Play the sound effect when a tetromino is placed
+            self.tetromino_place_sound.play()  # Play the sound effect when a tetromino is placed
 
             # Create a new tetromino
             self.current_tetromino = Tetromino()  # Create a new tetromino
