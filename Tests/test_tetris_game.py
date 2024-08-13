@@ -275,6 +275,93 @@ class TestTetrisGame(unittest.TestCase):
         self.assertEqual(game.score, 0)  # Check if the score was reset
         self.assertEqual(game.last_drop_time, 1.0)  # Check if the drop time was reset correctly
 
+    @patch('tetris_game.Grid')
+    @patch('tetris_game.Tetromino')
+    def test_check_game_over(self, MockTetromino, MockGrid):
+        # Initialize the game
+        width, height, block_size = 10, 20, 30
+        game = TetrisGame(width, height, block_size)
+
+        # Set up mocks
+        mock_grid_instance = MockGrid.return_value
+        mock_tetromino_instance = MockTetromino.return_value
+
+        # Simulate a valid position where the game should not be over
+        mock_grid_instance.is_valid_position.return_value = True
+        result = game.check_game_over()
+        self.assertFalse(result)  # Expecting False because the position is valid
+        mock_grid_instance.is_valid_position.assert_called_once_with(mock_tetromino_instance, game.tetromino_position)
+
+        # Reset mock for the next test case
+        mock_grid_instance.reset_mock()
+
+        # Simulate an invalid position where the game should be over
+        mock_grid_instance.is_valid_position.return_value = False
+        result = game.check_game_over()
+        self.assertTrue(result)  # Expecting True because the position is invalid
+        mock_grid_instance.is_valid_position.assert_called_once_with(mock_tetromino_instance, game.tetromino_position)
+
+    @patch('pygame.font.Font')
+    def test_draw_score(self, MockFont):
+        # Initialize the game
+        width, height, block_size = 10, 20, 30
+        game = TetrisGame(width, height, block_size)
+
+        # Create a mock font object
+        mock_font = MockFont.return_value
+
+        # Create a mock surface for the score rendering
+        mock_score_surface = Mock()
+        mock_font.render.return_value = mock_score_surface
+
+        # Mock the screen surface to capture blit calls
+        mock_screen = Mock()
+        game.screen = mock_screen
+
+        # Set the score for testing
+        game.score = 1234
+
+        # Call the method under test
+        game.draw_score()
+
+        # Assertions
+        mock_font.render.assert_called_once_with(f'Score: {game.score:04}', True, (255, 255, 255))  # Check the score was rendered correctly
+        mock_screen.blit.assert_called_once_with(mock_score_surface, (game.grid.width * game.grid.block_size + 20, 20))  # Check the score was blitted at the correct position
+
+    @patch('pygame.draw.rect')
+    def test_draw_tetromino(self, mock_draw_rect):
+        # Initialize the game
+        width, height, block_size = 10, 20, 30
+        game = TetrisGame(width, height, block_size)
+
+        # Create a mock tetromino with a specific shape
+        mock_tetromino = Mock()
+        mock_tetromino.current_shape = [
+            [1, 0, 0],
+            [1, 1, 1],
+            [0, 0, 0]
+        ]
+        mock_tetromino.get_color.return_value = (255, 0, 0)  # Red color
+
+        # Assign the mock tetromino to the game
+        game.current_tetromino = mock_tetromino
+        game.tetromino_position = [5, 5]  # Position the tetromino on the grid
+
+        # Call the method under test
+        game.draw_tetromino()
+
+        # Calculate expected rectangles
+        expected_rects = [
+            pygame.Rect((5 + 0) * 30, (5 + 0) * 30, 30, 30),
+            pygame.Rect((5 + 0) * 30, (5 + 1) * 30, 30, 30),
+            pygame.Rect((5 + 1) * 30, (5 + 1) * 30, 30, 30),
+            pygame.Rect((5 + 2) * 30, (5 + 1) * 30, 30, 30),
+        ]
+
+        # Assertions
+        for rect in expected_rects:
+            mock_draw_rect.assert_any_call(game.screen, (255, 0, 0), rect)  # Ensure each rectangle was drawn with the correct color and position
+
 
 if __name__ == "__main__":
     pygame.init()
