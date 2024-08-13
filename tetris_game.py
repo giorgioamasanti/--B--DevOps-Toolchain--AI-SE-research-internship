@@ -35,12 +35,17 @@ class TetrisGame:
         self.level_up_message = False  # Initialize level up message flag
         self.level_up_timer = 0  # Timer for level up message display
 
+        self.sound_effects_enabled = True  # Initialize sound effects state to enabled
+
         pygame.mixer.init()  # Initialize the mixer
         self.tetromino_place_sound = pygame.mixer.Sound(os.path.join(os.path.dirname(__file__), 'assets/solidify.mp3'))  # Updated sound effect path
-        print("Tetromino placement sound loaded successfully.")  # Log sound loading
+        self.row_clear_sound = pygame.mixer.Sound(os.path.join(os.path.dirname(__file__), 'assets/row_clear.mp3'))  # Load sound effect for row clearing
+        self.game_over_sound = pygame.mixer.Sound(os.path.join(os.path.dirname(__file__), 'assets/game_over.mp3'))  # Load sound effect for game over
+        print("Tetromino placement sound, row clear sound, and game over sound loaded successfully.")  # Log sound loading
 
         self.play_background_music()  # Start playing background music when the game initializes
 
+        self.music_enabled = True  # Initialize music state to enabled
         print("Tetris game initialized. Falling delay set to 750ms.")
 
     def play_background_music(self):
@@ -48,6 +53,24 @@ class TetrisGame:
         pygame.mixer.music.load(os.path.join(os.path.dirname(__file__), 'assets/background_music.mp3'))
         pygame.mixer.music.set_volume(0.5)  # Set volume (0.0 to 1.0)
         pygame.mixer.music.play(-1)  # -1 means the music will loop indefinitely
+
+    def toggle_music(self):
+        """Toggle the background music on and off."""
+        if self.music_enabled:
+            pygame.mixer.music.pause()  # Pause the music
+            print("Music paused.")
+        else:
+            pygame.mixer.music.unpause()  # Unpause the music
+            print("Music resumed.")
+        self.music_enabled = not self.music_enabled  # Toggle the state
+
+    def toggle_sound_effects(self):
+        """Toggle the sound effects on and off."""
+        self.sound_effects_enabled = not self.sound_effects_enabled  # Toggle the state
+        if self.sound_effects_enabled:
+            print("Sound effects enabled.")
+        else:
+            print("Sound effects disabled.")
 
     def add_high_score(self, score):
         """Add a new high score with the current timestamp."""
@@ -237,6 +260,10 @@ class TetrisGame:
                             self.move_tetromino(0, 1)  # Move down
                         elif event.key == pygame.K_UP:
                             self.rotate_tetromino()  # Rotate
+                        elif event.key == pygame.K_m:  # Check for 'M' key press
+                            self.toggle_music()  # Toggle music
+                        elif event.key == pygame.K_s:  # Check for 'S' key press
+                            self.toggle_sound_effects()  # Toggle sound effects
 
                 self.screen.fill((0, 0, 0))  # Fill with black background
 
@@ -251,6 +278,8 @@ class TetrisGame:
                 if self.check_game_over():
                     self.game_over = True  # Set game over flag
                     self.add_high_score(self.score)  # Add the current score to high scores
+                    if self.sound_effects_enabled:  # Check if sound effects are enabled before playing sound
+                        self.grid.play_game_over_sound()  # Play sound effect for game over
                     self.draw_game_over()  # Call to display "Game Over"
                     continue  # Skip to next iteration to wait for user input
 
@@ -321,15 +350,18 @@ class TetrisGame:
 
     def place_current_tetromino(self):
         try:
-            filled_rows = self.grid.place_tetromino(self.current_tetromino, self.tetromino_position)
+            filled_rows = self.grid.place_tetromino(self.current_tetromino, self.tetromino_position, self.sound_effects_enabled)
             print(f"place_current_tetromino: Filled rows: {filled_rows}")  # Debug print for filled rows
             if filled_rows > 0:
                 self.update_score(filled_rows)
+                if self.sound_effects_enabled:  # Check if sound effects are enabled before playing sound
+                    self.grid.row_clear_sound.play()  # Play sound effect when rows are cleared
             else:
                 print("No rows filled, update_score not called.")
 
             # Play the sound effect when a tetromino is placed
-            self.tetromino_place_sound.play()  # Play the sound effect when a tetromino is placed
+            if self.sound_effects_enabled:  # Check if sound effects are enabled before playing sound
+                self.tetromino_place_sound.play()  # Play the sound effect when a tetromino is placed
 
             # Create a new tetromino
             self.current_tetromino = Tetromino()  # Create a new tetromino
@@ -339,8 +371,9 @@ class TetrisGame:
             if self.check_game_over():
                 print("Game Over: New tetromino cannot be placed.")
                 self.add_high_score(self.score)  # Add the current score to high scores
+                if self.sound_effects_enabled:  # Check if sound effects are enabled before playing sound
+                    self.grid.play_game_over_sound()  # Play sound effect for game over
                 self.draw_game_over()  # Call the method to display "Game Over"
-                # Removed pygame.quit() and sys.exit() to allow for game restart
         except (IndexError, ValueError) as e:  # Catch specific exceptions
             print(f"Error placing tetromino: {e}")  # Log the error message
 

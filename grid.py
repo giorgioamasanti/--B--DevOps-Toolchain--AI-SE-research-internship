@@ -8,9 +8,27 @@ class Grid:
         self.block_size = block_size
         self.grid = [[0 for _ in range(width)] for _ in range(height)]
         self.color_grid = [[(0, 0, 0) for _ in range(width)] for _ in range(height)]  # New grid for colors
-        self.tetromino_place_sound = pygame.mixer.Sound(os.path.join(os.path.dirname(__file__), 'assets/solidify.mp3'))  # Load sound effect for tetromino placement
-        self.row_clear_sound = pygame.mixer.Sound(os.path.join(os.path.dirname(__file__), 'assets/row_clear.mp3'))  # Load sound effect for row clearing
-        print("Tetromino placement sound and row clear sound loaded successfully")  # Log sound loading
+
+        # Load sound effect for tetromino placement
+        self.tetromino_place_sound = pygame.mixer.Sound(os.path.join(os.path.dirname(__file__), 'assets/solidify.mp3'))
+
+        # Load sound effect for row clearing
+        self.row_clear_sound = pygame.mixer.Sound(os.path.join(os.path.dirname(__file__), 'assets/row_clear.mp3'))
+
+        # Load sound effect for game over
+        game_over_sound_path = os.path.join(os.path.dirname(__file__), 'assets/game_over.mp3')
+        print(f"Loading game over sound from: {game_over_sound_path}")  # Log the path being loaded
+        if not os.path.exists(game_over_sound_path):
+            print(f"Error: Game over sound file does not exist at {game_over_sound_path}")  # Log if the file does not exist
+        try:
+            self.game_over_sound = pygame.mixer.Sound(game_over_sound_path)  # Load sound effect for game over
+            print("Game over sound loaded successfully.")
+        except pygame.error as e:
+            print(f"Error loading game over sound: {e}")  # Log any error that occurs while loading the sound
+
+        print("Tetromino placement sound, row clear sound, and game over sound loaded successfully")  # Log sound loading
+
+        self.sound_effects_enabled = True  # Initialize sound effects state to enabled
 
     def draw(self, surface):
         surface.fill((0, 0, 0))
@@ -29,7 +47,7 @@ class Grid:
     def is_full(self):
         return any(self.grid[0])  # Check if the top row is filled
 
-    def place_tetromino(self, tetromino, position):
+    def place_tetromino(self, tetromino, position, sound_effects_enabled=True):
         shape = tetromino.get_shape()
         color = tetromino.get_color()  # Get the color of the tetromino
         for y, row in enumerate(shape):
@@ -41,8 +59,9 @@ class Grid:
                     else:
                         print(f"Tetromino position {position} is out of bounds.")
                         return 0  # Handle out-of-bounds gracefully
-        filled_rows = self.clear_filled_rows()  # Clear filled rows after placing a tetromino
-        self.tetromino_place_sound.play()  # Play sound effect when tetromino is placed
+        filled_rows = self.clear_filled_rows(sound_effects_enabled)  # Clear filled rows after placing a tetromino
+        if sound_effects_enabled:  # Check if sound effects are enabled before playing sound
+            self.tetromino_place_sound.play()  # Play sound effect when tetromino is placed
         print(f"place_tetromino: Filled rows cleared: {filled_rows}")  # Debug print for filled rows
         return filled_rows  # Return the number of filled rows cleared
 
@@ -85,7 +104,7 @@ class Grid:
         print(f"check_filled_rows: Filled rows detected: {filled_rows}")  # Debug print for filled rows
         return filled_rows
 
-    def clear_filled_rows(self):
+    def clear_filled_rows(self, sound_effects_enabled=True):
         filled_rows = self.check_filled_rows()  # Get filled rows
         for row in filled_rows:
             self.grid.pop(row)  # Remove the filled row
@@ -95,9 +114,26 @@ class Grid:
         print(f"clear_filled_rows: Cleared filled rows: {filled_rows}")  # Debug print for filled rows
 
         if filled_rows:  # Check if any rows were cleared
-            try:
-                self.row_clear_sound.play()  # Play sound effect for row clearing
-                print("Row clear sound played successfully.")  # Log sound playing
-            except Exception as e:
-                print(f"Error playing row clear sound: {e}")  # Log any error that occurs while playing sound
+            if sound_effects_enabled:  # Check if sound effects are enabled before playing sound
+                try:
+                    self.row_clear_sound.play()  # Play sound effect for row clearing
+                    print("Row clear sound played successfully.")  # Log sound playing
+                except Exception as e:
+                    print(f"Error playing row clear sound: {e}")  # Log any error that occurs while playing sound
         return len(filled_rows)  # Return the number of cleared rows
+
+    def play_game_over_sound(self):
+        """Play the game over sound effect."""
+        try:
+            self.game_over_sound.play()  # Play sound effect for game over
+            print("Game over sound played successfully.")  # Log sound playing
+        except Exception as e:
+            print(f"Error playing game over sound: {e}")  # Log any error that occurs while playing sound
+
+    def check_game_over(self):
+        """Check if the game is over (i.e., if a new tetromino collides on spawn)."""
+        if not self.is_valid_position(self.current_tetromino, self.tetromino_position):
+            print("Game Over: New tetromino cannot be placed.")
+            self.play_game_over_sound()  # Play the game over sound
+            return True
+        return False
