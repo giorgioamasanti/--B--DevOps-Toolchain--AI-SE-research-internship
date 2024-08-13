@@ -8,8 +8,9 @@ class Grid:
         self.block_size = block_size
         self.grid = [[0 for _ in range(width)] for _ in range(height)]
         self.color_grid = [[(0, 0, 0) for _ in range(width)] for _ in range(height)]  # New grid for colors
-        self.tetromino_place_sound = pygame.mixer.Sound(os.path.join(os.path.dirname(__file__), 'assets/solidify.mp3'))  # Load sound effect
-        print("Tetromino placement sound loaded successfully")  # Log sound loading
+        self.tetromino_place_sound = pygame.mixer.Sound(os.path.join(os.path.dirname(__file__), 'assets/solidify.mp3'))  # Load sound effect for tetromino placement
+        self.row_clear_sound = pygame.mixer.Sound(os.path.join(os.path.dirname(__file__), 'assets/row_clear.mp3'))  # Load sound effect for row clearing
+        print("Tetromino placement sound and row clear sound loaded successfully")  # Log sound loading
 
     def draw(self, surface):
         surface.fill((0, 0, 0))
@@ -92,4 +93,11 @@ class Grid:
             self.color_grid.pop(row)  # Remove the color row
             self.color_grid.insert(0, [(0, 0, 0) for _ in range(self.width)])  # Add new empty color row
         print(f"clear_filled_rows: Cleared filled rows: {filled_rows}")  # Debug print for filled rows
+
+        if filled_rows:  # Check if any rows were cleared
+            try:
+                self.row_clear_sound.play()  # Play sound effect for row clearing
+                print("Row clear sound played successfully.")  # Log sound playing
+            except Exception as e:
+                print(f"Error playing row clear sound: {e}")  # Log any error that occurs while playing sound
         return len(filled_rows)  # Return the number of cleared rows
