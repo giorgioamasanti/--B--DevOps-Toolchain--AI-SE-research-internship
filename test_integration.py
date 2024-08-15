@@ -116,11 +116,5 @@ class TestTetrisGameIntegration(unittest.TestCase):
         self.assertEqual(game.tetromino_position, [0, game.grid.width // 2 - 1])
         self.assertEqual(game.last_drop_time, 1.0)
 
-    def setUp(self):
-        # Log the current working directory
-        print(f"Current Working Directory: {os.getcwd()}")
-        # Log the paths of the modules being imported
-        print(f"Importing TetrisGame from: {TetrisGame.__module__}")
-
 if __name__ == '__main__':
     unittest.main()

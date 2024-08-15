@@ -4,12 +4,13 @@ import os
 from tetromino import Tetromino
 from grid import Grid
 from datetime import datetime  # Add this import at the beginning of the file
+from high_score_manager import HighScoreManager  # Add this import at the top
 
 class TetrisGame:
     def __init__(self, width=10, height=20, block_size=30):
         pygame.init()
 
-        self.screen_width = width * block_size + 350  # Adjusted width for the score display to fit high score table
+        self.screen_width = width * block_size + 350
         self.screen_height = height * block_size
         self.fps = 60
 
@@ -21,32 +22,45 @@ class TetrisGame:
         self.clock = pygame.time.Clock()
 
         self.current_tetromino = Tetromino()
-        self.tetromino_position = [0, width // 2 - 1]  # Start at the top of the grid
+        self.tetromino_position = [0, width // 2 - 1]
 
-        self.score = 0  # Initialize the score at the start of the game
+        self.score = 0
 
-        self.drop_time = 0.75  # Time interval for dropping tetromino (750ms)
-        self.last_drop_time = pygame.time.get_ticks() / 1000.0  # Track the last drop time in seconds
+        self.drop_time = 0.75
+        self.last_drop_time = pygame.time.get_ticks() / 1000.0
 
-        self.game_over = False  # New attribute to track game state
+        self.game_over = False
 
-        self.high_scores = []  # Initialize an empty list to store high scores
+        self.high_score_manager = HighScoreManager()
+        self.all_time_high_scores = self.high_score_manager.load_high_scores()  # Load all-time high scores
+        if self.all_time_high_scores is None:
+            self.all_time_high_scores = []
 
-        self.level_up_message = False  # Initialize level up message flag
-        self.level_up_timer = 0  # Timer for level up message display
+        self.current_session_scores = []  # Initialize an empty list for current session scores
 
-        self.sound_effects_enabled = True  # Initialize sound effects state to enabled
+        self.level_up_message = False
+        self.level_up_timer = 0
 
-        pygame.mixer.init()  # Initialize the mixer
-        self.tetromino_place_sound = pygame.mixer.Sound(os.path.join(os.path.dirname(__file__), 'assets/solidify.mp3'))  # Updated sound effect path
-        self.row_clear_sound = pygame.mixer.Sound(os.path.join(os.path.dirname(__file__), 'assets/row_clear.mp3'))  # Load sound effect for row clearing
-        self.game_over_sound = pygame.mixer.Sound(os.path.join(os.path.dirname(__file__), 'assets/game_over.mp3'))  # Load sound effect for game over
-        print("Tetromino placement sound, row clear sound, and game over sound loaded successfully.")  # Log sound loading
+        self.sound_effects_enabled = True
 
-        self.play_background_music()  # Start playing background music when the game initializes
+        pygame.mixer.init()
+        self.tetromino_place_sound = pygame.mixer.Sound(os.path.join(os.path.dirname(__file__), 'assets/solidify.mp3'))
+        self.row_clear_sound = pygame.mixer.Sound(os.path.join(os.path.dirname(__file__), 'assets/row_clear.mp3'))
+        self.game_over_sound = pygame.mixer.Sound(os.path.join(os.path.dirname(__file__), 'assets/game_over.mp3'))
+        print("Tetromino placement sound, row clear sound, and game over sound loaded successfully.")
 
-        self.music_enabled = True  # Initialize music state to enabled
+        self.play_background_music()
+
+        self.music_enabled = True
         print("Tetris game initialized. Falling delay set to 750ms.")
+
+    def load_high_scores(self):
+        """Load high scores from the HighScoreManager."""
+        try:
+            self.all_time_high_scores = self.high_score_manager.high_scores  # Load high scores
+            print(f"High scores loaded: {self.all_time_high_scores}")  # Log loaded high scores
+        except Exception as e:
+            print(f"Error loading high scores: {e}")  # Log error with loading high scores
 
     def play_background_music(self):
         """Play background music continuously."""
@@ -74,15 +88,32 @@ class TetrisGame:
 
     def add_high_score(self, score):
         """Add a new high score with the current timestamp."""
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")  # Get the current timestamp
-        self.high_scores.append((score, timestamp))  # Append the score and timestamp as a tuple
-        self.high_scores.sort(key=lambda x: x[0], reverse=True)  # Sort the scores in descending order
-        if len(self.high_scores) > 5:  # Keep only the top 5 scores
-            self.high_scores = self.high_scores[:5]
-        print(f"High scores updated: {self.high_scores}")  # Debug print for high scores
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        if isinstance(score, tuple):
+            score = score[0]  # Extract the score if it's a tuple
+
+        # Add to current session high scores
+        self.current_session_scores.append((score, timestamp))
+        self.current_session_scores.sort(key=lambda x: x[0], reverse=True)
+        self.current_session_scores = self.current_session_scores[:5]
+
+        # Update all-time high scores
+        self.all_time_high_scores.append((score, timestamp))
+        self.all_time_high_scores.sort(key=lambda x: x[0], reverse=True)
+        self.all_time_high_scores = self.all_time_high_scores[:5]
+
+        # Save the updated all-time high scores
+        self.high_score_manager.save_high_scores(self.all_time_high_scores)
+        print(f"Current session scores updated: {self.current_session_scores}")
+        print(f"All-time high scores updated: {self.all_time_high_scores}")
+
 
     def adjust_drop_speed(self):
         """Adjust the drop speed based on the score."""
+        print(f"Current score: {self.score}, Type: {type(self.score)}")  # Debugging output
+
+        if isinstance(self.score, tuple):
+            self.score = self.score[0]  # Fix the score if it's a tuple
         if self.score >= 1400:
             new_drop_time = 0.1
         elif self.score >= 1200:
@@ -107,67 +138,93 @@ class TetrisGame:
             self.level_up_timer = pygame.time.get_ticks() / 1000.0  # Reset the timer in seconds
             print(f"Drop speed adjusted to: {self.drop_time} seconds, Level Up Message triggered.")  # Log the adjustment
 
-    def draw_high_score_table(self):
-        font = pygame.font.Font(None, 24)  # Use default font and size 24
-        x_offset = self.grid.width * self.grid.block_size + 20  # Position to the right of the grid
-        y_offset = 100  # Starting Y position for the high score table
+    def draw_high_score_table(self, y_offset):
+        font = pygame.font.Font(None, 24)
+        x_offset = self.grid.width * self.grid.block_size + 20
 
-        # Draw the title for the high score table
-        title_surface = font.render('Current Session', True, (255, 255, 255))  # White color
-        self.screen.blit(title_surface, (x_offset, y_offset - 30))  # Position the title above the table
+        # Title for the high score table
+        title_surface = font.render('Current Session', True, (255, 255, 255))
+        self.screen.blit(title_surface, (x_offset, y_offset))
 
-        # Draw the header background
-        header_background_rect = pygame.Rect(x_offset, y_offset, 300, 30)  # Adjusted width for header
-        pygame.draw.rect(self.screen, (128, 128, 128), header_background_rect)  # Grey background for header
+        y_offset += 30  # Move Y position down for the header
 
-        # Draw the header for the high score table
+        # Draw the header background with increased width
+        header_background_rect = pygame.Rect(x_offset, y_offset, 320, 30)  # Increased width
+        pygame.draw.rect(self.screen, (128, 128, 128), header_background_rect)  # Grey background
+
+        # Draw the header text ("Score" and "Time") with adjusted position
         header_surface = font.render('Score     Time', True, (0, 0, 0))  # Black text
-        self.screen.blit(header_surface, (x_offset + 25, y_offset + 5))  # Adjusted position for padding (10 pixels to the right)
-        print(f"Header drawn at: ({x_offset + 25}, {y_offset + 5}) with width: {header_surface.get_width()} and height: {header_surface.get_height()}")
+        self.screen.blit(header_surface, (x_offset + 10, y_offset + 5))  # Adjust for padding
 
-        # Draw each high score, ensuring only the top 5 are displayed
-        for index, (score, timestamp) in enumerate(self.high_scores[:5]):  # Limit to the top 5 scores
-            score_surface = font.render(f'{score:04}', True, (255, 255, 255))  # Format score to 4 digits
-            time_surface = font.render(timestamp, True, (255, 255, 255))  # Render the timestamp
-            time_width = time_surface.get_width() * 0.75  # Reduce the width of the time column by 25%
+        y_offset += 30  # Move Y position down for the actual scores
 
-            self.screen.blit(score_surface, (x_offset + 5, y_offset + 35 + index * 30))  # Adjusted position for padding
-            self.screen.blit(time_surface, (x_offset + 5 + time_width + 10, y_offset + 35 + index * 30))  # Position timestamp next to score
+        # Draw each high score entry
+        for index, (score, timestamp) in enumerate(self.current_session_scores[:5]):  # Limit to top 5 scores
+            score_surface = font.render(f'{score:04}', True, (255, 255, 255))  # White text for score
+            time_surface = font.render(timestamp, True, (255, 255, 255))  # White text for timestamp
+            self.screen.blit(score_surface, (x_offset + 10, y_offset + 5 + index * 30))  # Move text downwards slightly
+            self.screen.blit(time_surface, (x_offset + 160, y_offset + 5 + index * 30))  # Move text downwards and to the right
 
-            print(f"Score drawn at: ({x_offset + 5}, {y_offset + 35 + index * 30}) with width: {score_surface.get_width()} and height: {score_surface.get_height()}")
-
-        # Draw gridlines around the high score table
-        table_width = 300  # Adjusted width of the table
-        table_height = 180  # Height of the table
+        # Draw grid lines around the current session table
+        table_width = 320  # Adjusted width of the table to match the header
+        table_height = 150  # Adjusted height of the table
         grid_color = (128, 128, 128)  # Grey color for gridlines
 
         # Draw vertical lines
-        for i in range(1, 6):  # 5 rows, draw 4 vertical lines
-            pygame.draw.line(self.screen, grid_color, (x_offset, y_offset + i * 30), (x_offset + table_width, y_offset + i * 30), 1)
-
-        # Adjust the vertical line position based on the width of the "Score" text
-        score_width = header_surface.get_width() * 0.75  # Calculate the width of the score text (25% less)
-        pygame.draw.line(self.screen, grid_color, (x_offset + score_width, y_offset), (x_offset + score_width, y_offset + table_height), 1)  # Vertical line at calculated position
+        pygame.draw.line(self.screen, grid_color, (x_offset, y_offset - 30), (x_offset, y_offset + table_height), 1)  # Left border
+        pygame.draw.line(self.screen, grid_color, (x_offset + table_width, y_offset - 30), (x_offset + table_width, y_offset + table_height), 1)  # Right border
+        pygame.draw.line(self.screen, grid_color, (x_offset + 150, y_offset - 30), (x_offset + 150, y_offset + table_height), 1)  # Vertical line slightly to the left
 
         # Draw horizontal lines
-        pygame.draw.line(self.screen, grid_color, (x_offset, y_offset), (x_offset + table_width, y_offset), 1)  # Top border
+        pygame.draw.line(self.screen, grid_color, (x_offset, y_offset - 30), (x_offset + table_width, y_offset - 30), 1)  # Top border
         pygame.draw.line(self.screen, grid_color, (x_offset, y_offset + table_height), (x_offset + table_width, y_offset + table_height), 1)  # Bottom border
-        pygame.draw.line(self.screen, grid_color, (x_offset, y_offset), (x_offset, y_offset + table_height), 1)  # Left border
-        pygame.draw.line(self.screen, grid_color, (x_offset + table_width, y_offset), (x_offset + table_width, y_offset + table_height), 1)  # Right border
+        for i in range(1, 6):  # Draw horizontal lines for each row in the table
+            pygame.draw.line(self.screen, grid_color, (x_offset, y_offset + i * 30), (x_offset + table_width, y_offset + i * 30), 1)
 
-    def draw_high_scores(self):
+
+    def draw_high_scores(self, y_offset):
         font = pygame.font.Font(None, 24)  # Use default font and size 24
         x_offset = self.grid.width * self.grid.block_size + 20  # Position to the right of the grid
-        y_offset = 100  # Starting Y position for high scores
 
         # Draw the title for high scores
         title_surface = font.render('High Scores', True, (255, 255, 255))  # White color
         self.screen.blit(title_surface, (x_offset, y_offset))
 
-        # Draw each high score, ensuring only the top 5 are displayed
-        for index, (score, timestamp) in enumerate(self.high_scores[:5]):  # Limit to the top 5 scores
-            score_surface = font.render(f'{index + 1}. {score:04} - {timestamp}', True, (255, 255, 255))  # Format score to 4 digits
-            self.screen.blit(score_surface, (x_offset, y_offset + 30 + index * 30))  # Position each score below the last
+        y_offset += 30  # Move Y position down for the header
+
+        # Draw the header background with increased width
+        header_background_rect = pygame.Rect(x_offset, y_offset, 320, 30)  # Increased width
+        pygame.draw.rect(self.screen, (128, 128, 128), header_background_rect)  # Grey background
+
+        # Draw the header text ("Score" and "Time") with adjusted position
+        header_surface = font.render('Score     Time', True, (0, 0, 0))  # Black text
+        self.screen.blit(header_surface, (x_offset + 10, y_offset + 5))  # Adjust for padding
+
+        y_offset += 30  # Move Y position down for the actual scores
+
+        # Draw each high score entry
+        for index, (score, timestamp) in enumerate(self.all_time_high_scores[:5]):  # Limit to top 5 scores
+            score_surface = font.render(f'{index + 1}. {score:04}', True, (255, 255, 255))  # White text for score
+            time_surface = font.render(timestamp, True, (255, 255, 255))  # White text for timestamp
+            self.screen.blit(score_surface, (x_offset + 10, y_offset + 5 + index * 30))  # Move text downwards slightly
+            self.screen.blit(time_surface, (x_offset + 160, y_offset + 5 + index * 30))  # Move text downwards and to the right
+
+        # Draw grid lines around the all-time high score table
+        table_width = 320  # Adjusted width of the table to match the header
+        table_height = 150  # Adjusted height of the table
+        grid_color = (128, 128, 128)  # Grey color for gridlines
+
+        # Draw vertical lines
+        pygame.draw.line(self.screen, grid_color, (x_offset, y_offset - 30), (x_offset, y_offset + table_height), 1)  # Left border
+        pygame.draw.line(self.screen, grid_color, (x_offset + table_width, y_offset - 30), (x_offset + table_width, y_offset + table_height), 1)  # Right border
+        pygame.draw.line(self.screen, grid_color, (x_offset + 150, y_offset - 30), (x_offset + 150, y_offset + table_height), 1)  # Vertical line slightly to the left
+
+        # Draw horizontal lines
+        pygame.draw.line(self.screen, grid_color, (x_offset, y_offset - 30), (x_offset + table_width, y_offset - 30), 1)  # Top border
+        pygame.draw.line(self.screen, grid_color, (x_offset, y_offset + table_height), (x_offset + table_width, y_offset + table_height), 1)  # Bottom border
+        for i in range(1, 6):  # Draw horizontal lines for each row in the table
+            pygame.draw.line(self.screen, grid_color, (x_offset, y_offset + i * 30), (x_offset + table_width, y_offset + i * 30), 1)
+
 
     def draw_game_over(self):
         font = pygame.font.Font(None, 20)  # Adjusted font size for the game over message
@@ -231,6 +288,7 @@ class TetrisGame:
         self.score = 0  # Reset the score
         self.last_drop_time = pygame.time.get_ticks() / 1000.0  # Reset drop time to current time
         self.game_over = False  # Ensure game_over is reset
+        self.level_up_message = False  # Reset level up message flag
         print("Game restarted.")
 
     def run(self):
@@ -272,7 +330,11 @@ class TetrisGame:
                 self.draw_tetromino()
 
                 self.draw_score()  # Draw the current score
-                self.draw_high_score_table()  # Draw the high score table
+                current_session_offset = 60  # Adjust as necessary to create space between sections
+                self.draw_high_score_table(current_session_offset)
+
+                all_time_high_scores_offset = current_session_offset + 240  # Adjust as necessary based on the height of the session table
+                self.draw_high_scores(all_time_high_scores_offset)
 
                 # Check for game over condition after placing the tetromino
                 if self.check_game_over():
@@ -311,7 +373,8 @@ class TetrisGame:
 
     def draw_score(self):
         font = pygame.font.Font(None, 36)  # Use default font and size 36
-        score_surface = font.render(f'Score: {self.score:04}', True, (255, 255, 255))  # Format score to 4 digits
+        score = self.score if isinstance(self.score, int) else self.score[0]
+        score_surface = font.render(f'Score: {score:04}', True, (255, 255, 255))  # Ensure score is an integer
         self.screen.blit(score_surface, (self.grid.width * self.grid.block_size + 20, 20))  # Position to the right of the grid
 
     def draw_tetromino(self):
@@ -393,3 +456,11 @@ class TetrisGame:
                 print("Tetromino rotated successfully.")
         else:
             print("Rotation failed, shape remains unchanged.")
+        print(f'High Scores List: {self.all_time_high_scores}')  # Log high scores for debugging
+        for index, entry in enumerate(self.all_time_high_scores[:5]):  # Log top 5 high scores
+            print(f'Entry at index {index}: {entry}, Type: {type(entry)}')  # Log entry and its type
+            if isinstance(entry, tuple) and len(entry) == 2:
+                score, timestamp = entry
+                print(f'Rendering Score: {score}, Timestamp: {timestamp}')  # Log score and timestamp before rendering
+            else:
+                print(f'Unexpected entry format at index {index}: {entry}')  # Log unexpected format
