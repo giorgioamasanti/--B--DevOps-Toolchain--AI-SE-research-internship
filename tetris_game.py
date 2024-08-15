@@ -153,7 +153,7 @@ class TetrisGame:
         pygame.draw.rect(self.screen, (128, 128, 128), header_background_rect)  # Grey background
 
         # Draw the header text ("Score" and "Time") with adjusted position
-        header_surface = font.render('Score     Time', True, (0, 0, 0))  # Black text
+        header_surface = font.render('Score                           Time', True, (0, 0, 0))  # Black text
         self.screen.blit(header_surface, (x_offset + 10, y_offset + 5))  # Adjust for padding
 
         y_offset += 30  # Move Y position down for the actual scores
@@ -197,7 +197,7 @@ class TetrisGame:
         pygame.draw.rect(self.screen, (128, 128, 128), header_background_rect)  # Grey background
 
         # Draw the header text ("Score" and "Time") with adjusted position
-        header_surface = font.render('Score     Time', True, (0, 0, 0))  # Black text
+        header_surface = font.render('Score                           Time', True, (0, 0, 0))  # Black text
         self.screen.blit(header_surface, (x_offset + 10, y_offset + 5))  # Adjust for padding
 
         y_offset += 30  # Move Y position down for the actual scores
