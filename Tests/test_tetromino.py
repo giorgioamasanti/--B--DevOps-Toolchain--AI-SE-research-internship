@@ -83,5 +83,13 @@ class TestTetromino(unittest.TestCase):
             rotated_shape = [list(row) for row in zip(*tetromino.current_shape[::-1])]
             self.assertTrue(tetromino.is_valid_rotation(rotated_shape, grid_state, position))
 
+    def test_no_three_consecutive_tetrominoes(self):
+        tetrominoes = [Tetromino() for _ in range(100)]
+        shapes = [tetromino.shape for tetromino in tetrominoes]
+
+        for i in range(2, len(shapes)):
+            self.assertFalse(shapes[i] == shapes[i-1] == shapes[i-2], "Same tetromino appeared three times in a row")
+
+    
 if __name__ == "__main__":
     unittest.main()

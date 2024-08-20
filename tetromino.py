@@ -27,6 +27,8 @@ class Tetromino:
         'Z': (255, 0, 0)     # Red
     }
 
+    last_two_shapes = []
+
     def __init__(self):
         self.shape = self.random_shape()
         self.color = self.colors[self.shape]
@@ -35,6 +37,11 @@ class Tetromino:
 
     def random_shape(self):
         shape = random.choice(list(self.shapes.keys()))
+        while len(self.last_two_shapes) >= 2 and shape == self.last_two_shapes[-1] == self.last_two_shapes[-2]:
+            shape = random.choice(list(self.shapes.keys()))
+        self.last_two_shapes.append(shape)
+        if len(self.last_two_shapes) > 2:
+            self.last_two_shapes.pop(0)
         print(f"Random shape selected: {shape}")
         return shape
 
