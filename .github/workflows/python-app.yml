@@ -70,19 +70,19 @@ jobs:
 
       - name: Upload artifact for Ubuntu
         if: matrix.os == 'ubuntu-latest'
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: Tetris-B-Linux
           path: dist/Tetris-B-Linux
       - name: Upload artifact for macOS
         if: matrix.os == 'macos-latest'
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: Tetris-B-macos
           path: dist/Tetris-B-macos
       - name: Upload artifact for Windows
         if: matrix.os == 'windows-latest'
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: Tetris-B-windows
           path: dist/Tetris-B-windows.exe
@@ -94,17 +94,17 @@ jobs:
 
     steps:
       - name: Download artifact for Ubuntu
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: Tetris-B-Linux
           path: ./dist/
       - name: Download artifact for macOS
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: Tetris-B-macos
           path: ./dist/
       - name: Download artifact for Windows
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: Tetris-B-windows
           path: ./dist/
