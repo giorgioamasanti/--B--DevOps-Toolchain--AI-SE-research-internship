@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ "master" ]
 
+
+permissions:
+  contents: write  
+
 jobs:
   build:
     runs-on: ${{ matrix.os }}
@@ -34,11 +38,23 @@ jobs:
           pip install pyinstaller
           if (Test-Path requirements.txt) { pip install -r requirements.txt }
 
-      - name: Build executable
+      - name: Build executable (not windows)
+        if: runner.os != 'Windows'
         run: |
           pyinstaller --onefile --windowed \
+          --icon=assets/tetris_icon.icns \
           --add-data "assets:assets" \
           main.py
+        env:
+          VERSION: ${{ github.sha }}
+            
+      - name: Build executable (windows)
+        if: runner.os == 'Windows'
+        run: |
+          & pyinstaller --onefile --windowed `
+            --icon=assets/tetris_icon.ico `
+            --add-data "assets;assets" `
+            main.py
         env:
           VERSION: ${{ github.sha }}
 
