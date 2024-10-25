@@ -36,7 +36,9 @@ jobs:
 
       - name: Build executable
         run: |
-          pyinstaller --onefile --windowed main.py
+          pyinstaller --onefile --windowed \
+          --add-data "assets:assets" \
+          main.py
         env:
           VERSION: ${{ github.sha }}
 
